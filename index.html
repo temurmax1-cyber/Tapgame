@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="uz">
 <head>
@@ -6,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cloud Coin Tap Game</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Firebase SDK lar -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -31,7 +33,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 8px;
+            gap: 5px;
             margin-top: 5px;
         }
         .brand-title {
@@ -117,7 +119,7 @@
             width: 100%;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
             align-items: center;
             margin-bottom: 5px;
         }
@@ -125,18 +127,18 @@
             width: 90%;
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 4px;
         }
         .energy-info {
             display: flex;
             justify-content: space-between;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             color: #e9d5ff;
         }
         .energy-bar-bg {
             width: 100%;
-            height: 12px;
+            height: 10px;
             background: #2e1065;
             border-radius: 10px;
             padding: 2px;
@@ -146,7 +148,7 @@
             height: 100%;
             width: 100%;
             background: linear-gradient(90deg, #f97316, #eab308);
-            border-radius: 8px;
+            border-radius: 6px;
             transition: width 0.2s ease;
         }
         .nav-bar {
@@ -178,7 +180,7 @@
             font-size: 18px;
         }
 
-        /* Modal oyna dizayni */
+        /* Modal oynalar */
         .modal {
             display: none;
             position: fixed;
@@ -235,7 +237,7 @@
             border: 1px solid rgba(147, 51, 234, 0.2);
         }
         .card-title {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: bold;
             color: white;
         }
@@ -250,12 +252,48 @@
             border-radius: 8px;
             padding: 10px;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 13px;
             cursor: pointer;
-            transition: opacity 0.2s;
         }
-        .action-btn:active {
-            opacity: 0.8;
+        .auction-gift-img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid #581c87;
+        }
+        .leaderboard-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            background: #1b0f28;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+        .admin-panel {
+            display: none;
+            background: #3b0764;
+            border: 1px solid #9333ea;
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+        }
+        .admin-input {
+            width: 100%;
+            padding: 8px;
+            border-radius: 6px;
+            border: none;
+            background: #1b0f28;
+            color: white;
+            margin-top: 5px;
+            font-size: 12px;
         }
     </style>
 </head>
@@ -321,7 +359,7 @@
                 <button class="close-btn" onclick="closeModal('boostModal')">&times;</button>
             </div>
             <div class="card-item">
-                <div class="card-title">📺 Reklama ko'rib energiya to'ldirish</div>
+                <div class="card-title">📺 Reklama ko'rib coin yig'ish</div>
                 <div class="card-desc">Reklama tomosha qiling va hisobingizga +100 coin qo'shib oling!</div>
                 <button class="action-btn" onclick="watchAd()">Reklama ko'rish (+100 Coin)</button>
             </div>
@@ -337,8 +375,8 @@
             </div>
             <div class="card-item">
                 <div class="card-title">Har bir referal uchun 1000 coin</div>
-                <div class="card-desc">Sizning havolangiz orqali kirgan har bir do'st uchun 1000 coin taqdim etiladi.</div>
-                <button class="action-btn" onclick="copyRefLink()">Havoladan nusxa olish</button>
+                <div class="card-desc">Sizning havolangiz orqali kirgan do'stlar: <span id="refCount">0</span> ta</div>
+                <button class="action-btn" onclick="copyRefLink()">Referal havoladan nusxa olish</button>
             </div>
         </div>
     </div>
@@ -350,15 +388,15 @@
                 <span>💰 Vazifalar (Earn)</span>
                 <button class="close-btn" onclick="closeModal('earnModal')">&times;</button>
             </div>
-            <div class="card-item">
-                <div class="card-title">📢 Rasmiy kanalga obuna bo'lish</div>
-                <div class="card-desc">Kanalimizga obuna bo'lib +500 coin oling.</div>
-                <button class="action-btn" onclick="completeTask(500, this)">Bajorish (+500 Coin)</button>
+            <!-- ADMIN PANEL (Faqat sizga ko'rinadi) -->
+            <div class="admin-panel" id="adminEarnPanel">
+                <div style="font-weight:bold; color:#facc15; margin-bottom:5px;">🛠️ Admin: Kanal qo'shish</div>
+                <input type="text" id="channelName" class="admin-input" placeholder="Kanal nomi (masalan: Yangiliklar)">
+                <input type="text" id="channelLink" class="admin-input" placeholder="Kanal havolasi (https://t.me/...)">
+                <button class="action-btn" style="margin-top:8px; width:100%;" onclick="addChannel()">Kanalni qo'shish</button>
             </div>
-            <div class="card-item">
-                <div class="card-title">📱 Telegram sahifamizga obuna bo'lish</div>
-                <div class="card-desc">Guruhga qo'shiling va +300 coin oling.</div>
-                <button class="action-btn" onclick="completeTask(300, this)">Bajarish (+300 Coin)</button>
+            <div id="tasksList" style="display:flex; flex-direction:column; gap:10px;">
+                <!-- Dinamik kanallar chiqadi -->
             </div>
         </div>
     </div>
@@ -367,67 +405,161 @@
     <div class="modal" id="auctionModal">
         <div class="modal-content">
             <div class="modal-header">
-                <span>🔨 Auksion (Sovg'alar & Telegram Giflar)</span>
+                <span>🔨 Auksion (Sovg'alar & Giflar)</span>
                 <button class="close-btn" onclick="closeModal('auctionModal')">&times;</button>
             </div>
+            <!-- ADMIN PANEL (Faqat sizga ko'rinadi) -->
+            <div class="admin-panel" id="adminAuctionPanel">
+                <div style="font-weight:bold; color:#facc15; margin-bottom:5px;">🛠️ Admin: Auksion sovg'asini o'zgartirish</div>
+                <input type="text" id="giftTitleInput" class="admin-input" placeholder="Sovg'a nomi">
+                <input type="text" id="giftImgInput" class="admin-input" placeholder="Rasm havolasi (URL)">
+                <button class="action-btn" style="margin-top:8px; width:100%;" onclick="updateAuctionGift()">Sovg'ani yangilash</button>
+            </div>
+
             <div class="card-item">
-                <div class="card-title">🎁 Premium Telegram Sovg'a / Gif</div>
-                <div class="card-desc">Eng ko'p coin tikkan foydalanuvchi auksion g'olibi bo'ladi! Hozirgi eng yuqori stavka: <span id="highestBid">5000</span> coin.</div>
-                <input type="number" id="bidAmount" placeholder="Coin miqdorini kiriting" style="padding:10px; border-radius:8px; border:none; background:#1b0f28; color:white;">
-                <button class="action-btn" onclick="placeBid()">Stavka qo'yish</button>
+                <div class="card-title" id="currentGiftTitle">🎁 Telegram Premium Sovg'a</div>
+                <img id="currentGiftImg" src="https://images.unsplash.com/photo-1513151233558-d860c5398176?w=500" class="auction-gift-img" alt="Sovg'a">
+                <div style="display:flex; flex-direction:column; gap:5px; margin-top:5px;">
+                    <input type="number" id="bidAmount" placeholder="Coin miqdorini kiriting" style="padding:10px; border-radius:8px; border:none; background:#1b0f28; color:white; font-size:13px;">
+                    <button class="action-btn" onclick="placeBid()">Stavka qo'yish</button>
+                </div>
+                <div style="font-size:10px; color:#cbd5e1; text-align:center; margin-top:2px;">*Kim eng koʻp coin taklif qilsa oʻsha yutadi</div>
+            </div>
+
+            <div class="card-item">
+                <div class="card-title">🏆 Ishtirokchilar reytingi (Top stavkalar)</div>
+                <div class="leaderboard-list" id="leaderboardList">
+                    <!-- Ishtirokchilar ro'yxati -->
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        let score = parseInt(localStorage.getItem('cloud_score')) || 0;
-        let energy = parseInt(localStorage.getItem('cloud_energy')) || 500;
+        // SIZNING FIREBASE CONFIG MA'LUMOTLARINGIZ
+        const firebaseConfig = {
+            apiKey: "AIzaSyD3f-HZK1wclA2fzM1Sg8S1LRluap9qg7k",
+            authDomain: "claude-coin.firebaseapp.com",
+            projectId: "claude-coin",
+            storageBucket: "claude-coin.firebasestorage.app",
+            messagingSenderId: "478948716667",
+            appId: "1:478948716667:web:d6ed5ddd8102e7bd0e72de",
+            measurementId: "G-84V124881S"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Telegram foydalanuvchi ma'lumotlari
+        let tg = window.Telegram && window.Telegram.WebApp;
+        let user = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
+        let userId = user ? user.id.toString() : 'guest_' + Math.floor(Math.random() * 100000);
+        let userName = user ? (user.first_name || 'Foydalanuvchi') : 'Mehmon';
+
+        // Admin ID avtomatik qo'shildi
+        const ADMIN_ID = "6680296518";
+
+        let score = 0;
+        let energy = 500;
         let maxEnergy = 500;
-        let highestBid = 5000;
+        let refCount = 0;
 
         const scoreEl = document.getElementById('score');
         const energyEl = document.getElementById('energy');
         const maxEnergyEl = document.getElementById('maxEnergy');
         const energyBar = document.getElementById('energyBar');
         const coin = document.getElementById('coin');
-        const highestBidEl = document.getElementById('highestBid');
+
+        // Bazadan foydalanuvchi ma'lumotlarini olish yoki yaratish
+        async function initUser() {
+            let userRef = db.collection('users').doc(userId);
+            let doc = await userRef.get();
+
+            let urlParams = new URLSearchParams(window.location.search);
+            let refParam = urlParams.get('start');
+
+            if (!doc.exists) {
+                // Yangi foydalanuvchi
+                let initialData = {
+                    name: userName,
+                    score: 0,
+                    energy: 500,
+                    lastReset: new Date().getTime(),
+                    refs: 0
+                };
+                await userRef.set(initialData);
+                score = 0;
+                energy = 500;
+
+                // Agar referal orqali kirgan bo'lsa
+                if (refParam && refParam.startsWith('ref_')) {
+                    let referrerId = refParam.replace('ref_', '');
+                    if (referrerId !== userId) {
+                        let referrerRef = db.collection('users').doc(referrerId);
+                        let refDoc = await referrerRef.get();
+                        if (refDoc.exists) {
+                            let refData = refDoc.data();
+                            await referrerRef.update({
+                                score: (refData.score || 0) + 1000,
+                                refs: (refData.refs || 0) + 1
+                            });
+                        }
+                    }
+                }
+            } else {
+                let data = doc.data();
+                score = data.score || 0;
+                energy = data.energy || 500;
+                refCount = data.refs || 0;
+                document.getElementById('refCount').innerText = refCount;
+
+                // 24 soatlik energiya tekshiruvi
+                let now = new Date().getTime();
+                let lastReset = data.lastReset || now;
+                if (now - lastReset > 24 * 60 * 60 * 1000) {
+                    energy = 500;
+                    await userRef.update({ energy: 500, lastReset: now });
+                }
+            }
+            updateUI();
+            checkAdmin();
+        }
 
         function updateUI() {
             scoreEl.innerText = score.toLocaleString();
             energyEl.innerText = energy;
             maxEnergyEl.innerText = maxEnergy;
-            let percent = (energy / maxEnergy) * 100;
-            energyBar.style.width = percent + '%';
-
-            localStorage.setItem('cloud_score', score);
-            localStorage.setItem('cloud_energy', energy);
+            energyBar.style.width = ((energy / maxEnergy) * 100) + '%';
         }
 
-        // 24 soatda energiyani 500 taga qayta to'ldirish logikasi
-        function check24HourReset() {
-            let lastReset = localStorage.getItem('cloud_last_reset');
-            let now = new Date().getTime();
-            let twentyFourHours = 24 * 60 * 60 * 1000;
+        async function saveUserData() {
+            await db.collection('users').doc(userId).set({
+                name: userName,
+                score: score,
+                energy: energy
+            }, { merge: true });
+        }
 
-            if (!lastReset || (now - lastReset > twentyFourHours)) {
-                energy = 500;
-                localStorage.setItem('cloud_last_reset', now);
-                localStorage.setItem('cloud_energy', 500);
+        // Admin ekanligini tekshirish
+        function checkAdmin() {
+            if (userId === ADMIN_ID) {
+                document.getElementById('adminEarnPanel').style.display = 'block';
+                document.getElementById('adminAuctionPanel').style.display = 'block';
             }
         }
-        check24HourReset();
 
-        coin.addEventListener('click', (e) => {
+        // Tap qilish mexanizmi (+1 coin, 1 energiya)
+        coin.addEventListener('click', async (e) => {
             if (energy >= 1) {
                 score += 1;
                 energy -= 1;
                 updateUI();
-
                 createFloatingText(e, `+1`);
 
-                if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
-                    window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+                if (tg && tg.HapticFeedback) {
+                    tg.HapticFeedback.impactOccurred('light');
                 }
+                await saveUserData();
             } else {
                 alert("Energiyangiz tugadi! 24 soatdan keyin yana to'ladi yoki Boost orqali to'ldirishingiz mumkin.");
             }
@@ -450,50 +582,117 @@
             setTimeout(() => el.remove(), 800);
         }
 
-        // Modal oyna funksiyalari
         function openModal(modalId) {
             document.getElementById(modalId).style.display = 'flex';
+            if (modalId === 'auctionModal') loadAuctionData();
+            if (modalId === 'earnModal') loadChannels();
         }
         function closeModal(modalId) {
             document.getElementById(modalId).style.display = 'none';
         }
 
-        // Boost: Reklama ko'rib coin yig'ish
-        function watchAd() {
-            // Haqiqiy reklamani integratsiya qilish uchun Adsgram yoki boshqa SDK shu yerga ulanadi
-            alert("Reklama muvaffaqiyatli ko'rildi! Hisobingizga +100 coin qo'shildi.");
+        // Boost: Reklama (+100 coin)
+        async function watchAd() {
             score += 100;
             updateUI();
+            await saveUserData();
+            alert("Reklama ko'rildi! Hisobingizga +100 coin qo'shildi.");
             closeModal('boostModal');
         }
 
-        // Friends: Referal havolasi
+        // Friends: Referal havola
         function copyRefLink() {
-            let userId = (window.Telegram && window.Telegram.WebApp.initDataUnsafe?.user?.id) || '12345';
-            let refLink = `https://t.me/Cloudcointapbot?start=ref_${userId}`;
+            let botUsername = "Cloudcointapbot"; // Bot username
+            let refLink = `https://t.me/${botUsername}?start=ref_${userId}`;
             navigator.clipboard.writeText(refLink);
-            alert("Referal havolangiz nusxalandi! Do'stlaringizga ulashing (+1000 coin oling).");
+            alert("Referal havolangiz nusxalandi! Do'stlaringizga ulashing.");
         }
 
-        // Earn: Vazifalar
-        function completeTask(reward, btn) {
+        // Earn: Kanal qo'shish va vazifalar
+        async function addChannel() {
+            let name = document.getElementById('channelName').value;
+            let link = document.getElementById('channelLink').value;
+            if (!name || !link) {
+                alert("Barcha maydonlarni to'ldiring!");
+                return;
+            }
+            await db.collection('channels').add({ name, link, reward: 500 });
+            alert("Kanal muvaffaqiyatli qo'shildi!");
+            document.getElementById('channelName').value = '';
+            document.getElementById('channelLink').value = '';
+            loadChannels();
+        }
+
+        async function loadChannels() {
+            let list = document.getElementById('tasksList');
+            list.innerHTML = '';
+            let snapshot = await db.collection('channels').get();
+            snapshot.forEach(doc => {
+                let ch = doc.data();
+                list.innerHTML += `
+                    <div class="card-item">
+                        <div class="card-title">📢 ${ch.name}</div>
+                        <div class="card-desc">Kanalga obuna bo'ling va +${ch.reward} coin oling.</div>
+                        <button class="action-btn" onclick="completeTask('${ch.link}', ${ch.reward}, this)">Obuna bo'lish (+${ch.reward} Coin)</button>
+                    </div>
+                `;
+            });
+        }
+
+        async function completeTask(link, reward, btn) {
+            window.open(link, '_blank');
             score += reward;
             updateUI();
+            await saveUserData();
             btn.innerText = "Bajarildi ✅";
             btn.disabled = true;
             btn.style.background = "#15803d";
         }
 
-        // Auksion stavka qo'yish
-        function placeBid() {
+        // Auksion funksiyalari
+        async function updateAuctionGift() {
+            let title = document.getElementById('giftTitleInput').value;
+            let img = document.getElementById('giftImgInput').value;
+            if (!title || !img) {
+                alert("Ma'lumotlarni kiriting!");
+                return;
+            }
+            await db.collection('settings').doc('auction').set({ title, img });
+            alert("Auksion sovg'asi yangilandi!");
+            loadAuctionData();
+        }
+
+        async function loadAuctionData() {
+            // Sovg'ani yuklash
+            let doc = await db.collection('settings').doc('auction').get();
+            if (doc.exists) {
+                let data = doc.data();
+                document.getElementById('currentGiftTitle').innerText = "🎁 " + data.title;
+                document.getElementById('currentGiftImg').src = data.img;
+            }
+
+            // Ishtirokchilar reytingi (Top stavkalar)
+            let lbList = document.getElementById('leaderboardList');
+            lbList.innerHTML = '';
+            let usersSnapshot = await db.collection('users').orderBy('score', 'desc').limit(10).get();
+            let rank = 1;
+            usersSnapshot.forEach(uDoc => {
+                let uData = uDoc.data();
+                lbList.innerHTML += `
+                    <div class="leaderboard-item">
+                        <span>#${rank} ${uData.name}</span>
+                        <span style="color: #facc15; font-weight: bold;">${(uData.score || 0).toLocaleString()} Coin</span>
+                    </div>
+                `;
+                rank++;
+            });
+        }
+
+        async function placeBid() {
             let bidInput = document.getElementById('bidAmount');
             let amount = parseInt(bidInput.value);
             if (isNaN(amount) || amount <= 0) {
-                alert("Iltimos, to'g'ri miqdor kiriting!");
-                return;
-            }
-            if (amount <= highestBid) {
-                alert("Stavka hozirgi eng yuqori stavkadan ko'p bo'lishi kerak!");
+                alert("To'g'ri miqdor kiriting!");
                 return;
             }
             if (score < amount) {
@@ -501,14 +700,20 @@
                 return;
             }
             score -= amount;
-            highestBid = amount;
-            highestBidEl.innerText = highestBid;
             updateUI();
-            alert("Tabriklayman! Siz eng yuqori stavka qo'ydingiz va auksion yetakchisiga aylandingiz!");
+            await saveUserData();
+            await db.collection('bids').add({
+                userId: userId,
+                name: userName,
+                amount: amount,
+                time: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            alert("Stavka muvaffaqiyatli qabul qilindi!");
             bidInput.value = '';
+            loadAuctionData();
         }
 
-        updateUI();
+        initUser();
     </script>
 </body>
 </html>
