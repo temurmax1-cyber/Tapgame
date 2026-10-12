@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Free Tap Bot Game</title>
+    <title>Cloudcoin Tap Game</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
@@ -13,57 +14,139 @@
             text-align: center;
             margin: 0;
             padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            height: 90vh;
         }
-        .score { font-size: 42px; font-weight: bold; margin: 20px 0; color: #38bdf8; }
+        h2 {
+            margin-top: 10px;
+            color: #38bdf8;
+        }
+        .score-container {
+            font-size: 42px;
+            font-weight: bold;
+            color: #38bdf8;
+            margin: 10px 0;
+        }
         #coin {
-            width: 180px; height: 180px;
-            background: linear-gradient(135deg, #38bdf8, #0284c7);
+            width: 180px;
+            height: 180px;
+            background: linear-gradient(135deg, #fbbf24, #d97706);
             border-radius: 50%;
-            margin: 30px auto;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 50px; cursor: pointer;
-            box-shadow: 0 10px 25px rgba(56, 189, 248, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px rgba(251, 191, 36, 0.4);
+            cursor: pointer;
+            transition: transform 0.1s ease;
             user-select: none;
-            transition: transform 0.1s;
         }
-        #coin:active { transform: scale(0.90); }
-        .ad-container {
-            margin-top: 40px;
-            padding: 10px;
+        #coin:active {
+            transform: scale(0.92);
+        }
+        .coin-inner {
+            width: 150px;
+            height: 150px;
+            background: #f59e0b;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+        }
+        .energy-bar-container {
+            width: 80%;
             background: #1e293b;
-            border-radius: 8px;
+            border-radius: 10px;
+            padding: 4px;
+            border: 1px: solid #334155;
+            margin: 15px 0;
+        }
+        .energy-bar {
+            height: 14px;
+            width: 100%;
+            background: #22c55e;
+            border-radius: 6px;
+            transition: width 0.2s ease;
+        }
+        .energy-text {
             font-size: 14px;
             color: #94a3b8;
+        }
+        .banner {
+            width: 100%;
+            padding: 15px;
+            background: #1e293b;
+            border-radius: 8px;
+            color: #64748b;
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
 
-    <h2>⚡ Tap & Earn Bot</h2>
-    <div class="score" id="score">0</div>
-    <div id="coin">🪙</div>
+    <div>
+        <h2>⚡ Cloudcoin Tap & Earn</h2>
+        <div class="score-container" id="score">0</div>
+    </div>
 
-    <div class="ad-container" id="ad-block">
-        <p>Reklama joyi (Banner)</p>
+    <div id="coin">
+        <div class="coin-inner">🪙</div>
+    </div>
+
+    <div>
+        <div class="energy-text">Energiya: <span id="energy">100</span> / 100</div>
+        <div class="energy-bar-container">
+            <div class="energy-bar" id="energyBar"></div>
+        </div>
+    </div>
+
+    <div class="banner">
+        Reklama joyi (Banner)
     </div>
 
     <script>
-        let tg = window.Telegram.WebApp;
-        tg.expand();
+        let score = 0;
+        let maxEnergy = 100;
+        let energy = 100;
 
-        let score = localStorage.getItem('user_score') ? parseInt(localStorage.getItem('user_score')) : 0;
-        document.getElementById("score").innerText = score;
+        const scoreElement = document.getElementById('score');
+        const coin = document.getElementById('coin');
+        const energyElement = document.getElementById('energy');
+        const energyBar = document.getElementById('energyBar');
 
-        const coin = document.getElementById("coin");
-        coin.addEventListener("click", () => {
-            score += 1;
-            document.getElementById("score").innerText = score;
-            localStorage.setItem('user_score', score);
-            
-            if (tg.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred("light");
+        // Tanga bosilganda ishlaydigan funksiya
+        coin.addEventListener('click', () => {
+            if (energy > 0) {
+                score += 1;
+                energy -= 1;
+                
+                scoreElement.innerText = score;
+                updateEnergyUI();
+
+                // Bosish effekti uchun
+                if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+                    window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+                }
             }
         });
+
+        // Energiyani avtomatik tiklash (har 1 sekundda 2 t tiklaiydi)
+        setInterval(() => {
+            if (energy < maxEnergy) {
+                energy += 2;
+                if (energy > maxEnergy) energy = maxEnergy;
+                updateEnergyUI();
+            }
+        }, 1000);
+
+        function updateEnergyUI() {
+            energyElement.innerText = energy;
+            let percent = (energy / maxEnergy) * 100;
+            energyBar.style.width = percent + '%';
+        }
     </script>
 </body>
 </html>
