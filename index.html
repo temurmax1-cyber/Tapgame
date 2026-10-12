@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cloud Coin Tap Game</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Firebase SDK lar -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     <style>
@@ -180,7 +179,6 @@
             font-size: 18px;
         }
 
-        /* Modal oynalar */
         .modal {
             display: none;
             position: fixed;
@@ -328,7 +326,7 @@
         </div>
 
         <div class="nav-bar">
-            <button class="nav-item active" onclick="switchTab('tap')">
+            <button class="nav-item active" onclick="openModal('tapModal')">
                 <span class="nav-icon">👆</span>
                 <span>Tap</span>
             </button>
@@ -388,7 +386,7 @@
                 <span>💰 Vazifalar (Earn)</span>
                 <button class="close-btn" onclick="closeModal('earnModal')">&times;</button>
             </div>
-            <!-- ADMIN PANEL (Faqat sizga ko'rinadi) -->
+            <!-- ADMIN PANEL -->
             <div class="admin-panel" id="adminEarnPanel">
                 <div style="font-weight:bold; color:#facc15; margin-bottom:5px;">🛠️ Admin: Kanal qo'shish</div>
                 <input type="text" id="channelName" class="admin-input" placeholder="Kanal nomi (masalan: Yangiliklar)">
@@ -396,7 +394,7 @@
                 <button class="action-btn" style="margin-top:8px; width:100%;" onclick="addChannel()">Kanalni qo'shish</button>
             </div>
             <div id="tasksList" style="display:flex; flex-direction:column; gap:10px;">
-                <!-- Dinamik kanallar chiqadi -->
+                <!-- Dinamik kanallar -->
             </div>
         </div>
     </div>
@@ -408,7 +406,7 @@
                 <span>🔨 Auksion (Sovg'alar & Giflar)</span>
                 <button class="close-btn" onclick="closeModal('auctionModal')">&times;</button>
             </div>
-            <!-- ADMIN PANEL (Faqat sizga ko'rinadi) -->
+            <!-- ADMIN PANEL -->
             <div class="admin-panel" id="adminAuctionPanel">
                 <div style="font-weight:bold; color:#facc15; margin-bottom:5px;">🛠️ Admin: Auksion sovg'asini o'zgartirish</div>
                 <input type="text" id="giftTitleInput" class="admin-input" placeholder="Sovg'a nomi">
@@ -428,15 +426,12 @@
 
             <div class="card-item">
                 <div class="card-title">🏆 Ishtirokchilar reytingi (Top stavkalar)</div>
-                <div class="leaderboard-list" id="leaderboardList">
-                    <!-- Ishtirokchilar ro'yxati -->
-                </div>
+                <div class="leaderboard-list" id="leaderboardList"></div>
             </div>
         </div>
     </div>
 
     <script>
-        // SIZNING FIREBASE CONFIG MA'LUMOTLARINGIZ
         const firebaseConfig = {
             apiKey: "AIzaSyD3f-HZK1wclA2fzM1Sg8S1LRluap9qg7k",
             authDomain: "claude-coin.firebaseapp.com",
@@ -450,13 +445,13 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Telegram foydalanuvchi ma'lumotlari
         let tg = window.Telegram && window.Telegram.WebApp;
         let user = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
-        let userId = user ? user.id.toString() : 'guest_' + Math.floor(Math.random() * 100000);
+        
+        // ID ni aniq matn ko'rinishida olish
+        let userId = user ? String(user.id) : 'guest_' + Math.floor(Math.random() * 100000);
         let userName = user ? (user.first_name || 'Foydalanuvchi') : 'Mehmon';
 
-        // Admin ID avtomatik qo'shildi
         const ADMIN_ID = "6680296518";
 
         let score = 0;
@@ -470,7 +465,6 @@
         const energyBar = document.getElementById('energyBar');
         const coin = document.getElementById('coin');
 
-        // Bazadan foydalanuvchi ma'lumotlarini olish yoki yaratish
         async function initUser() {
             let userRef = db.collection('users').doc(userId);
             let doc = await userRef.get();
@@ -479,7 +473,6 @@
             let refParam = urlParams.get('start');
 
             if (!doc.exists) {
-                // Yangi foydalanuvchi
                 let initialData = {
                     name: userName,
                     score: 0,
@@ -491,7 +484,6 @@
                 score = 0;
                 energy = 500;
 
-                // Agar referal orqali kirgan bo'lsa
                 if (refParam && refParam.startsWith('ref_')) {
                     let referrerId = refParam.replace('ref_', '');
                     if (referrerId !== userId) {
@@ -513,7 +505,6 @@
                 refCount = data.refs || 0;
                 document.getElementById('refCount').innerText = refCount;
 
-                // 24 soatlik energiya tekshiruvi
                 let now = new Date().getTime();
                 let lastReset = data.lastReset || now;
                 if (now - lastReset > 24 * 60 * 60 * 1000) {
@@ -540,7 +531,6 @@
             }, { merge: true });
         }
 
-        // Admin ekanligini tekshirish
         function checkAdmin() {
             if (userId === ADMIN_ID) {
                 document.getElementById('adminEarnPanel').style.display = 'block';
@@ -548,7 +538,6 @@
             }
         }
 
-        // Tap qilish mexanizmi (+1 coin, 1 energiya)
         coin.addEventListener('click', async (e) => {
             if (energy >= 1) {
                 score += 1;
@@ -583,6 +572,7 @@
         }
 
         function openModal(modalId) {
+            if(modalId === 'tapModal') return;
             document.getElementById(modalId).style.display = 'flex';
             if (modalId === 'auctionModal') loadAuctionData();
             if (modalId === 'earnModal') loadChannels();
@@ -591,7 +581,6 @@
             document.getElementById(modalId).style.display = 'none';
         }
 
-        // Boost: Reklama (+100 coin)
         async function watchAd() {
             score += 100;
             updateUI();
@@ -600,15 +589,13 @@
             closeModal('boostModal');
         }
 
-        // Friends: Referal havola
         function copyRefLink() {
-            let botUsername = "Cloudcointapbot"; // Bot username
+            let botUsername = "Cloudcointapbot"; 
             let refLink = `https://t.me/${botUsername}?start=ref_${userId}`;
             navigator.clipboard.writeText(refLink);
             alert("Referal havolangiz nusxalandi! Do'stlaringizga ulashing.");
         }
 
-        // Earn: Kanal qo'shish va vazifalar
         async function addChannel() {
             let name = document.getElementById('channelName').value;
             let link = document.getElementById('channelLink').value;
@@ -649,7 +636,6 @@
             btn.style.background = "#15803d";
         }
 
-        // Auksion funksiyalari
         async function updateAuctionGift() {
             let title = document.getElementById('giftTitleInput').value;
             let img = document.getElementById('giftImgInput').value;
@@ -663,7 +649,6 @@
         }
 
         async function loadAuctionData() {
-            // Sovg'ani yuklash
             let doc = await db.collection('settings').doc('auction').get();
             if (doc.exists) {
                 let data = doc.data();
@@ -671,7 +656,6 @@
                 document.getElementById('currentGiftImg').src = data.img;
             }
 
-            // Ishtirokchilar reytingi (Top stavkalar)
             let lbList = document.getElementById('leaderboardList');
             lbList.innerHTML = '';
             let usersSnapshot = await db.collection('users').orderBy('score', 'desc').limit(10).get();
