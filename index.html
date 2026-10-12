@@ -1,152 +1,304 @@
 
-<!DOCTYPE html>
+        <!DOCTYPE html>
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cloudcoin Tap Game</title>
+    <title>Cloud Coin Tap Game</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body {
-            background-color: #0f172a;
-            color: white;
-            font-family: Arial, sans-serif;
-            text-align: center;
+        * {
+            box-sizing: border-box;
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+        body {
+            background: linear-gradient(135deg, #1b0f28 0%, #0d0714 100%);
+            color: white;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
-            height: 90vh;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            padding: 15px 10px;
         }
-        h2 {
+        .header {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
             margin-top: 10px;
-            color: #38bdf8;
         }
-        .score-container {
-            font-size: 42px;
-            font-weight: bold;
-            color: #38bdf8;
-            margin: 10px 0;
+        .brand-title {
+            font-size: 14px;
+            letter-spacing: 2px;
+            color: #d8b4fe;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .balance-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 32px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        .balance-icon {
+            font-size: 28px;
+        }
+        .game-area {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
+            width: 100%;
         }
         #coin {
-            width: 180px;
-            height: 180px;
-            background: linear-gradient(135deg, #fbbf24, #d97706);
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, #fde047 0%, #eab308 50%, #ca8a04 100%);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 10px 25px rgba(251, 191, 36, 0.4);
+            box-shadow: 0 0 50px rgba(234, 179, 8, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.5);
             cursor: pointer;
-            transition: transform 0.1s ease;
-            user-select: none;
+            position: relative;
+            transition: transform 0.05s ease;
+            border: 4px solid #fef08a;
         }
         #coin:active {
-            transform: scale(0.92);
+            transform: scale(0.94);
         }
-        .coin-inner {
-            width: 150px;
-            height: 150px;
-            background: #f59e0b;
+        .coin-inner-ring {
+            width: 210px;
+            height: 210px;
+            border: 2px dashed rgba(133, 77, 14, 0.4);
             border-radius: 50%;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 50px;
+            position: relative;
         }
-        .energy-bar-container {
-            width: 80%;
-            background: #1e293b;
-            border-radius: 10px;
-            padding: 4px;
-            border: 1px: solid #334155;
-            margin: 15px 0;
+        .coin-text {
+            font-size: 18px;
+            font-weight: 800;
+            color: #713f12;
+            letter-spacing: 1px;
+            text-transform: uppercase;
         }
-        .energy-bar {
-            height: 14px;
+        .coin-symbol {
+            font-size: 75px;
+            font-weight: bold;
+            color: #713f12;
+            line-height: 1;
+        }
+        .floating-score {
+            position: absolute;
+            font-size: 28px;
+            font-weight: bold;
+            color: #fde047;
+            animation: floatUp 0.8s ease-out forwards;
+            pointer-events: none;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(0.8); }
+            100% { opacity: 0; transform: translateY(-80px) scale(1.2); }
+        }
+        .footer-section {
             width: 100%;
-            background: #22c55e;
-            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .energy-container {
+            width: 90%;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .energy-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: 600;
+            color: #e9d5ff;
+        }
+        .energy-bar-bg {
+            width: 100%;
+            height: 14px;
+            background: #2e1065;
+            border-radius: 10px;
+            padding: 2px;
+            border: 1px solid #581c87;
+        }
+        .energy-bar-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #f97316, #eab308);
+            border-radius: 8px;
             transition: width 0.2s ease;
         }
-        .energy-text {
-            font-size: 14px;
-            color: #94a3b8;
-        }
-        .banner {
+        .nav-bar {
             width: 100%;
-            padding: 15px;
-            background: #1e293b;
-            border-radius: 8px;
-            color: #64748b;
-            font-size: 14px;
+            background: rgba(30, 15, 50, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(147, 51, 234, 0.3);
+            border-radius: 16px;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 5px;
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            background: none;
+            border: none;
+            color: #cbd5e1;
+            font-size: 11px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .nav-item.active, .nav-item:hover {
+            color: #facc15;
+        }
+        .nav-icon {
+            font-size: 20px;
         }
     </style>
 </head>
 <body>
 
-    <div>
-        <h2>⚡ Cloudcoin Tap & Earn</h2>
-        <div class="score-container" id="score">0</div>
-    </div>
-
-    <div id="coin">
-        <div class="coin-inner">🪙</div>
-    </div>
-
-    <div>
-        <div class="energy-text">Energiya: <span id="energy">100</span> / 100</div>
-        <div class="energy-bar-container">
-            <div class="energy-bar" id="energyBar"></div>
+    <div class="header">
+        <div class="brand-title">Claude Coin</div>
+        <div class="balance-container">
+            <span class="balance-icon">🪙</span>
+            <span id="score">3,584,200</span>
         </div>
     </div>
 
-    <div class="banner">
-        Reklama joyi (Banner)
+    <div class="game-area">
+        <div id="coin">
+            <div class="coin-inner-ring">
+                <span class="coin-text">CLAUDE</span>
+                <span class="coin-symbol">C</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-section">
+        <div class="energy-container">
+            <div class="energy-info">
+                <span>⚡ Energy</span>
+                <span><span id="energy">1,842</span> / <span id="maxEnergy">2,000</span></span>
+            </div>
+            <div class="energy-bar-bg">
+                <div class="energy-bar-fill" id="energyBar"></div>
+            </div>
+        </div>
+
+        <div class="nav-bar">
+            <button class="nav-item active">
+                <span class="nav-icon">👆</span>
+                <span>Tap</span>
+            </button>
+            <button class="nav-item">
+                <span class="nav-icon">🔥</span>
+                <span>Boost</span>
+            </button>
+            <button class="nav-item">
+                <span class="nav-icon">👥</span>
+                <span>Friends</span>
+            </button>
+            <button class="nav-item">
+                <span class="nav-icon">💰</span>
+                <span>Earn</span>
+            </button>
+            <button class="nav-item">
+                <span class="nav-icon">🔨</span>
+                <span>Auksion</span>
+            </button>
+        </div>
     </div>
 
     <script>
-        let score = 0;
-        let maxEnergy = 100;
-        let energy = 100;
+        let score = 3584200;
+        let energy = 1842;
+        let maxEnergy = 2000;
+        let tapPower = 10; // Har bir bosishdagi tanga va energiya sarfi
 
-        const scoreElement = document.getElementById('score');
-        const coin = document.getElementById('coin');
-        const energyElement = document.getElementById('energy');
+        const scoreEl = document.getElementById('score');
+        const energyEl = document.getElementById('energy');
+        const maxEnergyEl = document.getElementById('maxEnergy');
         const energyBar = document.getElementById('energyBar');
+        const coin = document.getElementById('coin');
+        const gameArea = document.querySelector('.game-area');
 
-        // Tanga bosilganda ishlaydigan funksiya
-        coin.addEventListener('click', () => {
-            if (energy > 0) {
-                score += 1;
-                energy -= 1;
-                
-                scoreElement.innerText = score;
-                updateEnergyUI();
+        function updateUI() {
+            scoreEl.innerText = score.toLocaleString();
+            energyEl.innerText = energy.toLocaleString();
+            maxEnergyEl.innerText = maxEnergy.toLocaleString();
+            let percent = (energy / maxEnergy) * 100;
+            energyBar.style.width = percent + '%';
+        }
 
-                // Bosish effekti uchun
+        coin.addEventListener('click', (e) => {
+            if (energy >= tapPower) {
+                score += tapPower;
+                energy -= tapPower;
+                updateUI();
+
+                // Bosganda "+10" effekti
+                createFloatingText(e, `+${tapPower}`);
+
+                // Telefon tebranishi (Haptic)
                 if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
-                    window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+                    window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
                 }
             }
         });
 
-        // Energiyani avtomatik tiklash (har 1 sekundda 2 t tiklaiydi)
+        function createFloatingText(e, text) {
+            let rect = coin.getBoundingClientRect();
+            let x = e.clientX || (rect.left + rect.width / 2);
+            let y = e.clientY || (rect.top + rect.height / 2);
+
+            let el = document.createElement('div');
+            el.className = 'floating-score';
+            el.innerText = text;
+            
+            // Tasodifiy qiyofada biroz o'ngga yoki chapga uchishi uchun
+            let randomX = (Math.random() - 0.5) * 60;
+            el.style.left = (x + randomX - 20) + 'px';
+            el.style.top = (y - 40) + 'px';
+
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 800);
+        }
+
+        // Energiyani har sekundda avtomatik tiklash
         setInterval(() => {
             if (energy < maxEnergy) {
-                energy += 2;
+                energy += 15; // Sekundiga tiklanish tezligi
                 if (energy > maxEnergy) energy = maxEnergy;
-                updateEnergyUI();
+                updateUI();
             }
         }, 1000);
 
-        function updateEnergyUI() {
-            energyElement.innerText = energy;
-            let percent = (energy / maxEnergy) * 100;
-            energyBar.style.width = percent + '%';
-        }
+        updateUI();
     </script>
 </body>
 </html>
