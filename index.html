@@ -1,5 +1,5 @@
 
-        <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
@@ -32,7 +32,7 @@
             flex-direction: column;
             align-items: center;
             gap: 8px;
-            margin-top: 10px;
+            margin-top: 5px;
         }
         .brand-title {
             font-size: 14px;
@@ -61,8 +61,8 @@
             width: 100%;
         }
         #coin {
-            width: 250px;
-            height: 250px;
+            width: 240px;
+            height: 240px;
             background: radial-gradient(circle, #fde047 0%, #eab308 50%, #ca8a04 100%);
             border-radius: 50%;
             display: flex;
@@ -78,32 +78,31 @@
             transform: scale(0.94);
         }
         .coin-inner-ring {
-            width: 210px;
-            height: 210px;
+            width: 200px;
+            height: 200px;
             border: 2px dashed rgba(133, 77, 14, 0.4);
             border-radius: 50%;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            position: relative;
         }
         .coin-text {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 800;
             color: #713f12;
             letter-spacing: 1px;
             text-transform: uppercase;
         }
         .coin-symbol {
-            font-size: 75px;
+            font-size: 70px;
             font-weight: bold;
             color: #713f12;
             line-height: 1;
         }
         .floating-score {
             position: absolute;
-            font-size: 28px;
+            font-size: 24px;
             font-weight: bold;
             color: #fde047;
             animation: floatUp 0.8s ease-out forwards;
@@ -112,21 +111,21 @@
         }
         @keyframes floatUp {
             0% { opacity: 1; transform: translateY(0) scale(0.8); }
-            100% { opacity: 0; transform: translateY(-80px) scale(1.2); }
+            100% { opacity: 0; transform: translateY(-70px) scale(1.2); }
         }
         .footer-section {
             width: 100%;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 12px;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
         .energy-container {
             width: 90%;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 5px;
         }
         .energy-info {
             display: flex;
@@ -137,7 +136,7 @@
         }
         .energy-bar-bg {
             width: 100%;
-            height: 14px;
+            height: 12px;
             background: #2e1065;
             border-radius: 10px;
             padding: 2px;
@@ -152,19 +151,19 @@
         }
         .nav-bar {
             width: 100%;
-            background: rgba(30, 15, 50, 0.85);
+            background: rgba(30, 15, 50, 0.9);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(147, 51, 234, 0.3);
             border-radius: 16px;
             display: flex;
             justify-content: space-around;
-            padding: 10px 5px;
+            padding: 8px 4px;
         }
         .nav-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
             background: none;
             border: none;
             color: #cbd5e1;
@@ -176,17 +175,97 @@
             color: #facc15;
         }
         .nav-icon {
-            font-size: 20px;
+            font-size: 18px;
+        }
+
+        /* Modal oyna dizayni */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(13, 7, 20, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            justify-content: center;
+            align-items: flex-end;
+        }
+        .modal-content {
+            width: 100%;
+            max-height: 85vh;
+            background: #1e1033;
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            border: 1px solid rgba(147, 51, 234, 0.4);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #facc15;
+        }
+        .close-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 22px;
+            cursor: pointer;
+        }
+        .card-item {
+            background: #2a1647;
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            border: 1px solid rgba(147, 51, 234, 0.2);
+        }
+        .card-title {
+            font-size: 15px;
+            font-weight: bold;
+            color: white;
+        }
+        .card-desc {
+            font-size: 12px;
+            color: #cbd5e1;
+        }
+        .action-btn {
+            background: linear-gradient(135deg, #eab308, #ca8a04);
+            color: #1b0f28;
+            border: none;
+            border-radius: 8px;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .action-btn:active {
+            opacity: 0.8;
         }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div class="brand-title">Claude Coin</div>
+        <div class="brand-title">Cloud Coin</div>
         <div class="balance-container">
             <span class="balance-icon">🪙</span>
-            <span id="score">3,584,200</span>
+            <span id="score">0</span>
         </div>
     </div>
 
@@ -202,8 +281,8 @@
     <div class="footer-section">
         <div class="energy-container">
             <div class="energy-info">
-                <span>⚡ Energy</span>
-                <span><span id="energy">1,842</span> / <span id="maxEnergy">2,000</span></span>
+                <span>⚡ Energiya (24 soatlik limit)</span>
+                <span><span id="energy">500</span> / <span id="maxEnergy">500</span></span>
             </div>
             <div class="energy-bar-bg">
                 <div class="energy-bar-fill" id="energyBar"></div>
@@ -211,63 +290,146 @@
         </div>
 
         <div class="nav-bar">
-            <button class="nav-item active">
+            <button class="nav-item active" onclick="switchTab('tap')">
                 <span class="nav-icon">👆</span>
                 <span>Tap</span>
             </button>
-            <button class="nav-item">
+            <button class="nav-item" onclick="openModal('boostModal')">
                 <span class="nav-icon">🔥</span>
                 <span>Boost</span>
             </button>
-            <button class="nav-item">
+            <button class="nav-item" onclick="openModal('friendsModal')">
                 <span class="nav-icon">👥</span>
                 <span>Friends</span>
             </button>
-            <button class="nav-item">
+            <button class="nav-item" onclick="openModal('earnModal')">
                 <span class="nav-icon">💰</span>
                 <span>Earn</span>
             </button>
-            <button class="nav-item">
+            <button class="nav-item" onclick="openModal('auctionModal')">
                 <span class="nav-icon">🔨</span>
                 <span>Auksion</span>
             </button>
         </div>
     </div>
 
+    <!-- BOOST MODAL -->
+    <div class="modal" id="boostModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>🔥 Boost & Reklama</span>
+                <button class="close-btn" onclick="closeModal('boostModal')">&times;</button>
+            </div>
+            <div class="card-item">
+                <div class="card-title">📺 Reklama ko'rib energiya to'ldirish</div>
+                <div class="card-desc">Reklama tomosha qiling va hisobingizga +100 coin qo'shib oling!</div>
+                <button class="action-btn" onclick="watchAd()">Reklama ko'rish (+100 Coin)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FRIENDS MODAL -->
+    <div class="modal" id="friendsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>👥 Do'stlarni taklif qilish</span>
+                <button class="close-btn" onclick="closeModal('friendsModal')">&times;</button>
+            </div>
+            <div class="card-item">
+                <div class="card-title">Har bir referal uchun 1000 coin</div>
+                <div class="card-desc">Sizning havolangiz orqali kirgan har bir do'st uchun 1000 coin taqdim etiladi.</div>
+                <button class="action-btn" onclick="copyRefLink()">Havoladan nusxa olish</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EARN MODAL -->
+    <div class="modal" id="earnModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>💰 Vazifalar (Earn)</span>
+                <button class="close-btn" onclick="closeModal('earnModal')">&times;</button>
+            </div>
+            <div class="card-item">
+                <div class="card-title">📢 Rasmiy kanalga obuna bo'lish</div>
+                <div class="card-desc">Kanalimizga obuna bo'lib +500 coin oling.</div>
+                <button class="action-btn" onclick="completeTask(500, this)">Bajorish (+500 Coin)</button>
+            </div>
+            <div class="card-item">
+                <div class="card-title">📱 Telegram sahifamizga obuna bo'lish</div>
+                <div class="card-desc">Guruhga qo'shiling va +300 coin oling.</div>
+                <button class="action-btn" onclick="completeTask(300, this)">Bajarish (+300 Coin)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AUCTION MODAL -->
+    <div class="modal" id="auctionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>🔨 Auksion (Sovg'alar & Telegram Giflar)</span>
+                <button class="close-btn" onclick="closeModal('auctionModal')">&times;</button>
+            </div>
+            <div class="card-item">
+                <div class="card-title">🎁 Premium Telegram Sovg'a / Gif</div>
+                <div class="card-desc">Eng ko'p coin tikkan foydalanuvchi auksion g'olibi bo'ladi! Hozirgi eng yuqori stavka: <span id="highestBid">5000</span> coin.</div>
+                <input type="number" id="bidAmount" placeholder="Coin miqdorini kiriting" style="padding:10px; border-radius:8px; border:none; background:#1b0f28; color:white;">
+                <button class="action-btn" onclick="placeBid()">Stavka qo'yish</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        let score = 3584200;
-        let energy = 1842;
-        let maxEnergy = 2000;
-        let tapPower = 10; // Har bir bosishdagi tanga va energiya sarfi
+        let score = parseInt(localStorage.getItem('cloud_score')) || 0;
+        let energy = parseInt(localStorage.getItem('cloud_energy')) || 500;
+        let maxEnergy = 500;
+        let highestBid = 5000;
 
         const scoreEl = document.getElementById('score');
         const energyEl = document.getElementById('energy');
         const maxEnergyEl = document.getElementById('maxEnergy');
         const energyBar = document.getElementById('energyBar');
         const coin = document.getElementById('coin');
-        const gameArea = document.querySelector('.game-area');
+        const highestBidEl = document.getElementById('highestBid');
 
         function updateUI() {
             scoreEl.innerText = score.toLocaleString();
-            energyEl.innerText = energy.toLocaleString();
-            maxEnergyEl.innerText = maxEnergy.toLocaleString();
+            energyEl.innerText = energy;
+            maxEnergyEl.innerText = maxEnergy;
             let percent = (energy / maxEnergy) * 100;
             energyBar.style.width = percent + '%';
+
+            localStorage.setItem('cloud_score', score);
+            localStorage.setItem('cloud_energy', energy);
         }
 
+        // 24 soatda energiyani 500 taga qayta to'ldirish logikasi
+        function check24HourReset() {
+            let lastReset = localStorage.getItem('cloud_last_reset');
+            let now = new Date().getTime();
+            let twentyFourHours = 24 * 60 * 60 * 1000;
+
+            if (!lastReset || (now - lastReset > twentyFourHours)) {
+                energy = 500;
+                localStorage.setItem('cloud_last_reset', now);
+                localStorage.setItem('cloud_energy', 500);
+            }
+        }
+        check24HourReset();
+
         coin.addEventListener('click', (e) => {
-            if (energy >= tapPower) {
-                score += tapPower;
-                energy -= tapPower;
+            if (energy >= 1) {
+                score += 1;
+                energy -= 1;
                 updateUI();
 
-                // Bosganda "+10" effekti
-                createFloatingText(e, `+${tapPower}`);
+                createFloatingText(e, `+1`);
 
-                // Telefon tebranishi (Haptic)
                 if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
-                    window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+                    window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
                 }
+            } else {
+                alert("Energiyangiz tugadi! 24 soatdan keyin yana to'ladi yoki Boost orqali to'ldirishingiz mumkin.");
             }
         });
 
@@ -280,23 +442,71 @@
             el.className = 'floating-score';
             el.innerText = text;
             
-            // Tasodifiy qiyofada biroz o'ngga yoki chapga uchishi uchun
-            let randomX = (Math.random() - 0.5) * 60;
-            el.style.left = (x + randomX - 20) + 'px';
-            el.style.top = (y - 40) + 'px';
+            let randomX = (Math.random() - 0.5) * 50;
+            el.style.left = (x + randomX - 15) + 'px';
+            el.style.top = (y - 30) + 'px';
 
             document.body.appendChild(el);
             setTimeout(() => el.remove(), 800);
         }
 
-        // Energiyani har sekundda avtomatik tiklash
-        setInterval(() => {
-            if (energy < maxEnergy) {
-                energy += 15; // Sekundiga tiklanish tezligi
-                if (energy > maxEnergy) energy = maxEnergy;
-                updateUI();
+        // Modal oyna funksiyalari
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Boost: Reklama ko'rib coin yig'ish
+        function watchAd() {
+            // Haqiqiy reklamani integratsiya qilish uchun Adsgram yoki boshqa SDK shu yerga ulanadi
+            alert("Reklama muvaffaqiyatli ko'rildi! Hisobingizga +100 coin qo'shildi.");
+            score += 100;
+            updateUI();
+            closeModal('boostModal');
+        }
+
+        // Friends: Referal havolasi
+        function copyRefLink() {
+            let userId = (window.Telegram && window.Telegram.WebApp.initDataUnsafe?.user?.id) || '12345';
+            let refLink = `https://t.me/Cloudcointapbot?start=ref_${userId}`;
+            navigator.clipboard.writeText(refLink);
+            alert("Referal havolangiz nusxalandi! Do'stlaringizga ulashing (+1000 coin oling).");
+        }
+
+        // Earn: Vazifalar
+        function completeTask(reward, btn) {
+            score += reward;
+            updateUI();
+            btn.innerText = "Bajarildi ✅";
+            btn.disabled = true;
+            btn.style.background = "#15803d";
+        }
+
+        // Auksion stavka qo'yish
+        function placeBid() {
+            let bidInput = document.getElementById('bidAmount');
+            let amount = parseInt(bidInput.value);
+            if (isNaN(amount) || amount <= 0) {
+                alert("Iltimos, to'g'ri miqdor kiriting!");
+                return;
             }
-        }, 1000);
+            if (amount <= highestBid) {
+                alert("Stavka hozirgi eng yuqori stavkadan ko'p bo'lishi kerak!");
+                return;
+            }
+            if (score < amount) {
+                alert("Hisobingizda yetarli coin yo'q!");
+                return;
+            }
+            score -= amount;
+            highestBid = amount;
+            highestBidEl.innerText = highestBid;
+            updateUI();
+            alert("Tabriklayman! Siz eng yuqori stavka qo'ydingiz va auksion yetakchisiga aylandingiz!");
+            bidInput.value = '';
+        }
 
         updateUI();
     </script>
