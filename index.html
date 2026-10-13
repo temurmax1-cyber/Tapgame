@@ -34,7 +34,6 @@
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
-        /* Coin tap animation effect */
         .coin-btn {
             transition: transform 0.05s ease;
         }
@@ -42,7 +41,6 @@
             transform: scale(0.92);
         }
 
-        /* Floating tap numbers animation */
         @keyframes floatUp {
             0% { opacity: 1; transform: translateY(0) scale(1); }
             100% { opacity: 0; transform: translateY(-80px) scale(1.4); }
@@ -57,7 +55,6 @@
             text-shadow: 0 2px 10px rgba(52, 211, 153, 0.5);
         }
 
-        /* Hide scrollbars */
         ::-webkit-scrollbar {
             display: none;
         }
@@ -76,7 +73,7 @@
                 </div>
             </div>
             <div class="text-right">
-                <div class="text-xs text-gray-400 uppercase tracking-wider">Balans</div>
+                <div class="text-xs text-gray-400 uppercase tracking-wider">BALANS</div>
                 <div class="text-xl font-extrabold text-emerald-400 flex items-center justify-end gap-1">
                     <span id="balance">0</span> <span class="text-sm">CLOUD</span>
                 </div>
@@ -89,16 +86,23 @@
         
         <!-- CLICKER TAB -->
         <div id="tab-clicker" class="tab-pane flex flex-col items-center justify-center w-full h-full">
+            
+            <!-- Profit per hour card -->
+            <div class="glass-card px-4 py-2 rounded-xl mb-4 flex items-center gap-2 border border-emerald-500/20">
+                <span class="text-xs text-gray-400">Soatlik daromad:</span>
+                <span class="text-xs font-bold text-emerald-400" id="profit-per-hour">+0 CLOUD/soat</span>
+            </div>
+
             <!-- Score Board -->
-            <div class="text-center mb-6">
+            <div class="text-center mb-4">
                 <div class="text-5xl font-extrabold tracking-tight text-white flex items-center justify-center gap-2">
                     <img src="logo1.jpg" class="w-10 h-10 rounded-full object-cover border border-emerald-500/30" alt="Icon">
                     <span id="clicker-balance">0</span>
                 </div>
             </div>
 
-            <!-- Circular Tap Coin Area with logo1.jpg -->
-            <div class="relative flex items-center justify-center my-4" id="click-container" style="width: 260px; height: 260px;">
+            <!-- Circular Tap Coin Area -->
+            <div class="relative flex items-center justify-center my-2" id="click-container" style="width: 260px; height: 260px;">
                 <div class="absolute w-full h-full rounded-full bg-emerald-500/10 blur-xl animate-pulse"></div>
                 <button id="tap-btn" class="coin-btn relative w-64 h-64 rounded-full p-2 glass flex items-center justify-center shadow-2xl border-2 border-emerald-500/30 focus:outline-none">
                     <div class="w-full h-full rounded-full overflow-hidden shadow-inner flex items-center justify-center bg-slate-900">
@@ -108,7 +112,7 @@
             </div>
 
             <!-- Energy Bar -->
-            <div class="w-full max-w-xs mt-8">
+            <div class="w-full max-w-xs mt-6">
                 <div class="flex justify-between text-xs text-gray-300 mb-2 font-medium">
                     <span class="flex items-center gap-1">⚡ Energiya</span>
                     <span><span id="energy">1000</span> / <span id="max-energy">1000</span></span>
@@ -132,31 +136,31 @@
                 </div>
                 <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
                     <div>
-                        <h3 class="font-semibold text-sm">Do'stni taklif qilish</h3>
-                        <p class="text-xs text-emerald-400">+10,000 CLOUD</p>
+                        <h3 class="font-semibold text-sm">Do'st taklif qilish bonusi</h3>
+                        <p class="text-xs text-emerald-400">+500 CLOUD</p>
                     </div>
-                    <button class="bg-emerald-500 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs active:scale-95 transition">Taklif</button>
+                    <button class="bg-emerald-500 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs active:scale-95 transition">Olish</button>
                 </div>
             </div>
         </div>
 
         <!-- BOOST / SHOP TAB -->
         <div id="tab-boost" class="tab-pane hidden w-full h-full flex flex-col">
-            <h1 class="text-2xl font-bold mb-4 text-center">Bustlar va Do'kon</h1>
+            <h1 class="text-2xl font-bold mb-4 text-center">Bustlar va Kartalar</h1>
             <div class="space-y-3 overflow-y-auto flex-1 pr-1">
                 <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
                     <div>
-                        <h3 class="font-semibold text-sm">Turbo Tap (+1 coin)</h3>
+                        <h3 class="font-semibold text-sm">Turbo Tap (+1 kuch)</h3>
                         <p class="text-xs text-gray-400">Narxi: 1,000 CLOUD</p>
                     </div>
-                    <button class="bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-bold px-4 py-2 rounded-xl text-xs">Sotib olish</button>
+                    <button onclick="buyUpgrade('tap')" class="bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-bold px-4 py-2 rounded-xl text-xs">Sotib olish</button>
                 </div>
                 <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
                     <div>
-                        <h3 class="font-semibold text-sm">Energiya sig'imi</h3>
+                        <h3 class="font-semibold text-sm">Energiya sig'imini oshirish</h3>
                         <p class="text-xs text-gray-400">Narxi: 2,000 CLOUD</p>
                     </div>
-                    <button class="bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-bold px-4 py-2 rounded-xl text-xs">Sotib olish</button>
+                    <button onclick="buyUpgrade('energy')" class="bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-bold px-4 py-2 rounded-xl text-xs">Sotib olish</button>
                 </div>
             </div>
         </div>
@@ -164,8 +168,9 @@
         <!-- FRIENDS TAB -->
         <div id="tab-friends" class="tab-pane hidden w-full h-full flex flex-col items-center justify-center text-center">
             <h1 class="text-2xl font-bold mb-2">Do'stlar</h1>
-            <p class="text-xs text-gray-400 mb-6">Har bir taklif qilingan do'st uchun bonus oling!</p>
-            <button class="w-full py-3 bg-emerald-500 text-slate-950 font-bold rounded-2xl shadow-lg active:scale-95 transition">Do'stni taklif qilish</button>
+            <p class="text-xs text-emerald-400 mb-2 font-semibold">Har bir taklif qilingan do'st uchun +500 CLOUD beriladi!</p>
+            <p class="text-xs text-gray-400 mb-6">Do'stlaringizni taklif qiling va birga tanga yig'ing.</p>
+            <button onclick="inviteFriend()" class="w-full py-3 bg-emerald-500 text-slate-950 font-bold rounded-2xl shadow-lg active:scale-95 transition">Do'stni taklif qilish</button>
         </div>
 
         <!-- WALLET TAB -->
@@ -206,28 +211,36 @@
         </div>
     </nav>
 
-    <!-- Game Logic Script -->
+    <!-- Game Logic Script with LocalStorage Persistence -->
     <script>
-        // Initialize Telegram WebApp
         const tg = window.Telegram.WebApp;
         tg.expand();
 
+        // Load saved state or default values
         let gameState = {
-            balance: 0,
-            energy: 1000,
-            maxEnergy: 1000,
-            level: 1,
-            tapPower: 1
+            balance: parseInt(localStorage.getItem('cloud_balance')) || 0,
+            energy: parseInt(localStorage.getItem('cloud_energy')) || 1000,
+            maxEnergy: parseInt(localStorage.getItem('cloud_maxEnergy')) || 1000,
+            level: parseInt(localStorage.getItem('cloud_level')) || 1,
+            tapPower: parseInt(localStorage.getItem('cloud_tapPower')) || 1,
+            profitPerHour: parseInt(localStorage.getItem('cloud_profit')) || 0
         };
 
-        // Load user info from Telegram if available
         if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
             const user = tg.initDataUnsafe.user;
             document.getElementById('username').innerText = user.first_name || 'Geymer';
             document.getElementById('user-initial').innerText = (user.first_name || 'U').charAt(0).toUpperCase();
         }
 
-        // Update UI elements
+        function saveState() {
+            localStorage.setItem('cloud_balance', gameState.balance);
+            localStorage.setItem('cloud_energy', gameState.energy);
+            localStorage.setItem('cloud_maxEnergy', gameState.maxEnergy);
+            localStorage.setItem('cloud_level', gameState.level);
+            localStorage.setItem('cloud_tapPower', gameState.tapPower);
+            localStorage.setItem('cloud_profit', gameState.profitPerHour);
+        }
+
         function updateUI() {
             document.getElementById('balance').innerText = gameState.balance.toLocaleString();
             document.getElementById('clicker-balance').innerText = gameState.balance.toLocaleString();
@@ -235,20 +248,20 @@
             document.getElementById('energy').innerText = gameState.energy;
             document.getElementById('max-energy').innerText = gameState.maxEnergy;
             document.getElementById('user-level').innerText = gameState.level;
+            document.getElementById('profit-per-hour').innerText = '+' + gameState.profitPerHour.toLocaleString() + ' CLOUD/soat';
             
             const energyPercent = (gameState.energy / gameState.maxEnergy) * 100;
             document.getElementById('energy-bar').style.width = energyPercent + '%';
         }
 
-        // Tap Clicker Action with floating animation
         const tapBtn = document.getElementById('tap-btn');
         tapBtn.addEventListener('pointerdown', (e) => {
             if (gameState.energy >= gameState.tapPower) {
                 gameState.balance += gameState.tapPower;
                 gameState.energy -= gameState.tapPower;
+                saveState();
                 updateUI();
 
-                // Create floating animation number
                 const rect = tapBtn.getBoundingClientRect();
                 const x = e.clientX - rect.left;
                 const y = e.clientY - rect.top;
@@ -268,11 +281,40 @@
         setInterval(() => {
             if (gameState.energy < gameState.maxEnergy) {
                 gameState.energy = Math.min(gameState.maxEnergy, gameState.energy + 2);
+                saveState();
                 updateUI();
             }
         }, 1000);
 
-        // Tab Navigation System
+        function buyUpgrade(type) {
+            if (type === 'tap' && gameState.balance >= 1000) {
+                gameState.balance -= 1000;
+                gameState.tapPower += 1;
+                saveState();
+                updateUI();
+                alert('Muvaffaqiyatli sotib olindi!');
+            } else if (type === 'energy' && gameState.balance >= 2000) {
+                gameState.balance -= 2000;
+                gameState.maxEnergy += 500;
+                gameState.energy = gameState.maxEnergy;
+                saveState();
+                updateUI();
+                alert('Energiya sig\'imi oshirildi!');
+            } else {
+                alert('Balansingiz yetarli emas!');
+            }
+        }
+
+        function inviteFriend() {
+            const botUsername = "Cloudcointapbot"; 
+            const inviteLink = `https://t.me/share/url?url=https://t.me/${botUsername}&text=CLOUD%20Coin%20o'y-iniga%20qo'shiling%20va%20500%20tanga%20bonus%20oling!`;
+            if (tg.openTelegramLink) {
+                tg.openTelegramLink(inviteLink);
+            } else {
+                window.open(inviteLink, '_blank');
+            }
+        }
+
         function switchTab(targetTab) {
             document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
             document.getElementById('tab-' + targetTab).classList.remove('hidden');
