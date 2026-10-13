@@ -68,7 +68,7 @@
         .section { display: none; width: 100%; }
         .section.active { display: block; }
 
-        /* Auction Cards (Skrinshotdagi kabi) */
+        /* Auction Cards */
         .auction-card {
             background: var(--card-bg); border-radius: 16px; overflow: hidden;
             margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.1);
@@ -88,7 +88,7 @@
         .auction-price { color: var(--gold-color); font-weight: bold; font-size: 15px; }
         .auction-timer { font-size: 12px; color: var(--success-color); font-weight: bold; }
 
-        /* Detailed Auction Modal / Screen */
+        /* Detailed Auction Modal */
         #auction-detail-view {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--bg-color); z-index: 2000; overflow-y: auto; padding: 20px; box-sizing: border-box;
@@ -212,7 +212,7 @@
         <div class="card" style="flex-direction: column; align-items: flex-start; margin-top: 20px;">
             <h3>Auksionga Sovg'a Qo'shish</h3>
             <input type="text" id="admin-auction-title" placeholder="Sovg'a nomi (Masalan: Telegram Premium)">
-            <input type="number" id="admin-auction-hours" placeholder="Tugash vaqti (Necha soatdan keyin tugasin? Masalan: 10)">
+            <input type="number" id="admin-auction-hours" placeholder="Tugash vaqti (Necha soatdan keyin tugasin?)">
             <label style="font-size: 12px; color: var(--secondary-text); margin-top: 5px;">Sovg'a rasmini tanlang:</label>
             <input type="file" id="admin-auction-img-file" accept="image/*">
             <button class="btn" onclick="adminCreateAuction()" style="margin-top: 10px;">Auksionni boshlash</button>
@@ -346,6 +346,16 @@
     // --- TASKS ---
     function loadTasks() {
         db.collection("tasks").get().then((querySnapshot) => {
+            // Agar vazifalar bazada umuman yo'q bo'lsa, avtomatik bitta test vazifa qo'shamiz
+            if (querySnapshot.empty) {
+                db.collection("tasks").add({
+                    title: "Telegram kanalimizga obuna bo'ling",
+                    link: "https://t.me/",
+                    reward: 500
+                }).then(() => loadTasks());
+                return;
+            }
+
             let html = "";
             let adminHtml = "";
             querySnapshot.forEach((doc) => {
@@ -369,8 +379,8 @@
                     <button class="btn btn-danger" style="width: auto;" onclick="adminDeleteTask('${taskId}')">O'chirish</button>
                 </div>`;
             });
-            document.getElementById("tasks-list").innerHTML = html || "<p>Hozircha vazifalar yo'q.</p>";
-            document.getElementById("admin-tasks-manage").innerHTML = adminHtml || "";
+            document.getElementById("tasks-list").innerHTML = html;
+            document.getElementById("admin-tasks-manage").innerHTML = adminHtml;
         });
     }
 
@@ -387,6 +397,18 @@
     // --- AUCTION SYSTEM ---
     function loadAuctions() {
         db.collection("auctions").get().then((querySnapshot) => {
+            // Agar auksionlar bazada bo'lmasa, test uchun bitta auksion qo'shamiz
+            if (querySnapshot.empty) {
+                db.collection("auctions").add({
+                    title: "Telegram Premium (1 Oy)",
+                    img: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop",
+                    endTime: new Date().getTime() + (12 * 60 * 60 * 1000),
+                    topBid: 14200,
+                    likes: 71
+                }).then(() => loadAuctions());
+                return;
+            }
+
             let html = "";
             let adminHtml = "";
             let now = new Date().getTime();
@@ -395,7 +417,6 @@
                 let item = doc.data();
                 let auctionId = doc.id;
                 
-                // Taymerni hisoblash
                 let endTime = item.endTime || (now + 3600000);
                 let timeLeft = endTime - now;
                 let hours = Math.max(0, Math.floor(timeLeft / (1000 * 60 * 60)));
@@ -411,7 +432,7 @@
                             <div class="auction-title">${item.title}</div>
                             <div class="auction-price">💎 ${item.topBid || 0} 🪙</div>
                         </div>
-                        <div class="auction-timer">⏳ ${hours} soat ${minutes} daq</div>
+                        <div class="auction-timer">⏳ ${hours}s ${minutes}d</div>
                     </div>
                 </div>`;
 
@@ -424,7 +445,7 @@
                 </div>`;
             });
 
-            document.getElementById("auction-list").innerHTML = html || "<p style='color:var(--secondary-text);'>Hozircha faol auksionlar yo'q.</p>";
+            document.getElementById("auction-list").innerHTML = html;
             document.getElementById("admin-auctions-manage").innerHTML = adminHtml;
         });
     }
@@ -434,7 +455,6 @@
             if (!doc.exists) return;
             let item = doc.data();
 
-            // Yetakchilar ro'yxati (buxgalteriya va stavkalar)
             db.collection("auctions").doc(auctionId).collection("bids").orderBy("amount", "desc").limit(5).get().then((bidsSnapshot) => {
                 let leadersHtml = "";
                 let rank = 1;
@@ -470,7 +490,7 @@
                     </div>
 
                     <div style="margin-top: 20px;">
-                        <input type="number" id="bid-input" placeholder="Coin miqdorini kiriting (Masalan: 1000)">
+                        <input type="number" id="bid-input" placeholder="Coin miqdorini kiriting">
                         <button class="btn" style="margin-top: 10px;" onclick="placeBid('${auctionId}', ${userHasBid})">TAKLIF BERISH</button>
                     </div>
                 `;
@@ -495,13 +515,11 @@
         saveData();
         updateUI();
 
-        // Bazaga saqlash
         db.collection("auctions").doc(auctionId).collection("bids").doc(userId).set({
             name: userName,
             amount: amount,
             userId: userId
         }, { merge: true }).then(() => {
-            // Top bid ni yangilash
             db.collection("auctions").doc(auctionId).update({ topBid: amount });
             alert("Stavka muvaffaqiyatli qabul qilindi!");
             openAuctionDetail(auctionId);
@@ -577,7 +595,7 @@
                 topBid: 0,
                 likes: Math.floor(Math.random() * 50) + 20
             }).then(() => {
-                alert("Auksion muvaffaqiyatli boshlandi va taymer o'rnatildi!");
+                alert("Auksion muvaffaqiyatli boshlandi!");
                 document.getElementById("admin-auction-title").value = "";
                 document.getElementById("admin-auction-hours").value = "";
                 fileInput.value = "";
