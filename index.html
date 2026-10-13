@@ -24,9 +24,9 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             user-select: none;
             -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
         body {
-            /* Tabiat manzarasi foni va ustidan qoramtir parda */
             background: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.45)), url('https://images.unsplash.com/photo-1534088568595-a066f410bcda?q=80&w=1000&auto=format&fit=crop');
             background-size: cover;
             background-position: center;
@@ -43,7 +43,6 @@
         .container { width: 100%; max-width: 480px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; }
         .hidden { display: none !important; }
 
-        /* Yuqoridagi balans ko'rinishi */
         .top-balance-card {
             display: flex;
             align-items: center;
@@ -55,19 +54,22 @@
         .top-balance-card .coin-icon { font-size: 32px; }
         .top-balance-card span { font-size: 42px; font-weight: 900; color: #ffffff; letter-spacing: -1px; }
 
-        /* Markaziy bosiladigan logo tugmasi */
+        /* Mukammal dumaloq va to'rtburchak fonsiz coin tugmasi */
         .tap-circle {
-            width: 280px;
-            height: 280px;
+            width: 270px;
+            height: 270px;
             border-radius: 50%;
-            background: transparent;
-            margin: 10px auto;
+            background: none;
+            margin: 15px auto;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             border: none;
             outline: none;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 40px rgba(251, 191, 36, 0.2);
             transition: transform 0.05s ease;
         }
         .tap-circle img {
@@ -75,14 +77,12 @@
             height: 100%;
             border-radius: 50%;
             object-fit: cover;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 50px rgba(251, 191, 36, 0.2);
-            border: 4px solid rgba(255, 255, 255, 0.3);
+            pointer-events: none;
         }
         .tap-circle:active {
-            transform: scale(0.93);
+            transform: scale(0.92);
         }
 
-        /* Energiya va chiziq qismi */
         .energy-wrapper {
             width: 100%;
             max-width: 340px;
@@ -118,7 +118,6 @@
         .section.active { display: block; }
         .section h2 { text-align: center; margin-bottom: 20px; font-weight: 800; font-size: 22px; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
 
-        /* Kartochkalar va boshqa bo'limlar */
         .auction-card {
             background: rgba(15, 23, 42, 0.85);
             backdrop-filter: blur(15px);
@@ -175,7 +174,6 @@
         .btn:active { opacity: 0.8; }
         .btn-danger { background: var(--danger-color); color: #fff; }
 
-        /* Rasmda ko'rsatilgan shaffof yashil/qora shisha uslubidagi pastki menyu */
         .nav-bar {
             position: fixed;
             bottom: 12px;
@@ -236,7 +234,7 @@
             <span id="top-balance">0</span>
         </div>
         
-        <!-- Markaziy Tanga / Logotip Tugmasi -->
+        <!-- Dumaloq va mukammal logo tugma -->
         <button class="tap-circle" id="tap-btn">
             <img src="logo.jpeg" alt="Cloud Logo" onerror="this.src='https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop'">
         </button>
@@ -324,7 +322,7 @@
     <div id="auction-detail-content"></div>
 </div>
 
-<!-- 5-Item Modern Glassmorphism Navigation Bar -->
+<!-- Nav Bar -->
 <div class="nav-bar">
     <button class="nav-item" onclick="switchTab('boost', this)">
         <svg viewBox="0 0 24 24"><path d="M12 2l-5.5 9h11z"/><path d="M6.5 13h11l-5.5 9z" opacity=".7"/></svg>
