@@ -2,84 +2,132 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cloud Coin - Notcoin Style</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cloud Coin WebApp</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <style>
         :root {
-            --bg-color: #0b0e14;
-            --card-bg: #161b22;
-            --accent-color: #00f2fe;
-            --gold-color: #ffd700;
+            --accent-color: #38bdf8;
+            --gold-color: #fbbf24;
             --text-color: #ffffff;
-            --secondary-text: #8b949e;
-            --danger-color: #f85149;
-            --success-color: #3fb950;
+            --secondary-text: rgba(255, 255, 255, 0.7);
+            --danger-color: #ef4444;
+            --success-color: #22c55e;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
         }
         body {
-            margin: 0; padding: 0;
-            background-color: var(--bg-color);
-            color: var(--text-color); 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            display: flex; flex-direction: column; align-items: center;
-            min-height: 100vh; padding-bottom: 90px;
+            /* Tabiat manzarasi foni va ustidan qoramtir parda */
+            background: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.45)), url('https://images.unsplash.com/photo-1534088568595-a066f410bcda?q=80&w=1000&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 100vh;
+            overflow: hidden;
+            padding: 15px 15px 90px 15px;
         }
-        .container { width: 100%; max-width: 480px; padding: 20px; box-sizing: border-box; text-align: center; }
+        .container { width: 100%; max-width: 480px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; }
         .hidden { display: none !important; }
 
+        /* Yuqoridagi balans ko'rinishi */
         .top-balance-card {
-            display: flex; justify-content: center; align-items: center; gap: 8px;
-            background: rgba(22, 27, 34, 0.7); padding: 8px 18px; border-radius: 20px;
-            margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.06); width: fit-content; margin-left: auto; margin-right: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.5);
         }
-        .top-balance-card span { font-size: 18px; font-weight: 800; color: var(--gold-color); }
+        .top-balance-card .coin-icon { font-size: 32px; }
+        .top-balance-card span { font-size: 42px; font-weight: 900; color: #ffffff; letter-spacing: -1px; }
 
-        .balance-card {
-            background: transparent;
-            margin-bottom: 10px;
-        }
-        .balance-title { font-size: 13px; color: var(--secondary-text); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
-        .balance-amount { font-size: 48px; font-weight: 900; color: var(--text-color); margin-top: 5px; letter-spacing: -1px; }
-
+        /* Markaziy bosiladigan logo tugmasi */
         .tap-circle {
-            width: 260px; height: 260px; border-radius: 50%;
+            width: 280px;
+            height: 280px;
+            border-radius: 50%;
             background: transparent;
-            margin: 20px auto; display: flex; align-items: center; justify-content: center;
+            margin: 10px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
-            user-select: none; transition: transform 0.05s ease;
-            border: none; padding: 0; outline: none;
+            border: none;
+            outline: none;
+            transition: transform 0.05s ease;
         }
         .tap-circle img {
-            width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 40px rgba(255, 255, 255, 0.05);
-            border: 4px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 50px rgba(251, 191, 36, 0.2);
+            border: 4px solid rgba(255, 255, 255, 0.3);
         }
-        .tap-circle:active { 
-            transform: scale(0.92); 
+        .tap-circle:active {
+            transform: scale(0.93);
         }
 
-        .energy-container {
+        /* Energiya va chiziq qismi */
+        .energy-wrapper {
             width: 100%;
-            padding: 0 10px;
-            margin-top: 15px;
+            max-width: 340px;
+            margin-top: 25px;
         }
         .energy-info {
-            display: flex; justify-content: space-between; font-size: 14px; font-weight: 700; color: var(--secondary-text); margin-bottom: 8px;
+            display: flex;
+            justify-content: flex-end;
+            font-size: 16px;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 8px;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.6);
         }
-        .energy-bar-container { background: #21262d; border-radius: 8px; height: 12px; width: 100%; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
-        .energy-bar { background: linear-gradient(90deg, #38bdf8, #818cf8); height: 100%; width: 100%; transition: width 0.3s; }
+        .energy-bar-container {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 12px;
+            height: 14px;
+            width: 100%;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+        }
+        .energy-bar {
+            background: linear-gradient(90deg, #facc15, #f59e0b);
+            height: 100%;
+            width: 100%;
+            border-radius: 10px;
+            transition: width 0.2s ease;
+        }
 
         .section { display: none; width: 100%; text-align: left; }
         .section.active { display: block; }
-        .section h2 { text-align: center; margin-bottom: 20px; font-weight: 800; font-size: 22px; }
+        .section h2 { text-align: center; margin-bottom: 20px; font-weight: 800; font-size: 22px; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
 
+        /* Kartochkalar va boshqa bo'limlar */
         .auction-card {
-            background: var(--card-bg); border-radius: 16px; overflow: hidden;
-            margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.06);
-            cursor: pointer; transition: transform 0.2s;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(15px);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            cursor: pointer;
+            transition: transform 0.2s;
         }
         .auction-card:hover { transform: translateY(-2px); }
         .auction-img-container { position: relative; width: 100%; height: 160px; background: #0d1117; }
@@ -87,7 +135,7 @@
         .auction-badge {
             position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7);
             padding: 4px 10px; border-radius: 20px; font-size: 12px;
-            display: flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,0.1);
+            display: flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,0.2);
         }
         .auction-info { padding: 14px; display: flex; justify-content: space-between; align-items: center; }
         .auction-title { font-size: 16px; font-weight: bold; }
@@ -96,22 +144,28 @@
 
         #auction-detail-view {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-color); z-index: 2000; overflow-y: auto; padding: 20px; box-sizing: border-box;
+            background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); z-index: 2000; overflow-y: auto; padding: 20px; box-sizing: border-box;
             display: none; text-align: left;
         }
         .back-btn { background: none; border: none; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; margin-bottom: 15px; display: flex; align-items: center; gap: 5px; }
         
         .leader-item {
-            background: var(--card-bg); border-radius: 12px; padding: 12px; margin-bottom: 8px;
-            display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.05);
+            background: rgba(30, 41, 59, 0.8); border-radius: 12px; padding: 12px; margin-bottom: 8px;
+            display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.1);
         }
-        .leader-item.top-1 { background: rgba(251, 191, 36, 0.1); border: 1px solid var(--gold-color); }
+        .leader-item.top-1 { background: rgba(251, 191, 36, 0.2); border: 1px solid var(--gold-color); }
 
         .card {
-            background: var(--card-bg); border-radius: 14px; padding: 16px;
-            margin-bottom: 12px; text-align: left; display: flex;
-            justify-content: space-between; align-items: center;
-            border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(15px);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.15);
         }
         .btn {
             background: #ffffff; color: #000000; border: none;
@@ -121,23 +175,53 @@
         .btn:active { opacity: 0.8; }
         .btn-danger { background: var(--danger-color); color: #fff; }
 
-        /* Clean 4-Item Professional Navigation Bar */
+        /* Rasmda ko'rsatilgan shaffof yashil/qora shisha uslubidagi pastki menyu */
         .nav-bar {
-            position: fixed; bottom: 0; left: 0; width: 100%;
-            background: rgba(13, 17, 23, 0.95); display: flex; justify-content: space-around;
-            padding: 8px 10px; border-top: 1px solid rgba(255,255,255,0.06); box-sizing: border-box; z-index: 1000;
-            backdrop-filter: blur(20px);
+            position: fixed;
+            bottom: 12px;
+            left: 12px;
+            right: 12px;
+            background: rgba(20, 45, 30, 0.85);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 6px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-sizing: border-box;
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
         .nav-item {
-            background: none; border: none; color: var(--secondary-text);
-            font-size: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px;
-            font-weight: 700; flex: 1; padding: 8px 0; border-radius: 12px; transition: all 0.2s;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 11px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            font-weight: 700;
+            flex: 1;
+            padding: 8px 4px;
+            border-radius: 14px;
+            transition: all 0.2s;
         }
-        .nav-item.active { color: var(--text-color); background: rgba(255,255,255,0.08); }
+        .nav-item.active {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.18);
+        }
+        .nav-item svg {
+            width: 22px;
+            height: 22px;
+            fill: currentColor;
+        }
 
         input, textarea {
             width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.08); background: #0d1117; color: var(--text-color); box-sizing: border-box;
+            border: 1px solid rgba(255,255,255,0.2); background: rgba(15, 23, 42, 0.9); color: var(--text-color); box-sizing: border-box;
             font-size: 14px; outline: none;
         }
     </style>
@@ -148,22 +232,18 @@
     <!-- HOME SECTION -->
     <div id="home-section" class="section active" style="text-align: center;">
         <div class="top-balance-card">
-            <span>🪙</span> <span id="top-balance">0</span>
-        </div>
-        <div class="balance-card">
-            <div class="balance-title">Sizning Balansingiz</div>
-            <div class="balance-amount" id="balance">0</div>
+            <span class="coin-icon">🪙</span> 
+            <span id="top-balance">0</span>
         </div>
         
+        <!-- Markaziy Tanga / Logotip Tugmasi -->
         <button class="tap-circle" id="tap-btn">
             <img src="logo.jpeg" alt="Cloud Logo" onerror="this.src='https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop'">
         </button>
 
-        <div class="energy-container">
-            <div class="energy-info">
-                <span>⚡ Energiya</span>
-                <span id="energy-text">500 / 500</span>
-            </div>
+        <!-- Energiya qismi -->
+        <div class="energy-wrapper">
+            <div class="energy-info" id="energy-text">500 / 500</div>
             <div class="energy-bar-container">
                 <div class="energy-bar" id="energy-bar"></div>
             </div>
@@ -211,13 +291,13 @@
             <button class="btn" onclick="copyRefLink()" style="margin-top: 5px;">Havolani nusxalash</button>
             
             <h3 style="margin-top: 15px; font-size: 14px;">Siz taklif qilgan do'stlar:</h3>
-            <div id="referrals-list" style="width: 100%; max-height: 130px; overflow-y: auto; font-size: 13px; color: var(--secondary-text); background: #0d1117; padding: 10px; border-radius: 8px; box-sizing: border-box;">
+            <div id="referrals-list" style="width: 100%; max-height: 130px; overflow-y: auto; font-size: 13px; color: var(--secondary-text); background: rgba(15,23,42,0.6); padding: 10px; border-radius: 8px; box-sizing: border-box;">
                 Hozircha do'stlar yo'q.
             </div>
         </div>
     </div>
 
-    <!-- ADMIN SECTION (Faqat admin uchun ochiladi) -->
+    <!-- ADMIN SECTION -->
     <div id="admin-section" class="section">
         <h2>Admin Panel</h2>
         <div class="card" style="flex-direction: column; align-items: flex-start;">
@@ -244,14 +324,32 @@
     <div id="auction-detail-content"></div>
 </div>
 
-<!-- 4-Item Professional Navigation Bar (Admin tugmasi shartli ravishda profil ichiga yoki maxfiy chiqadi) -->
+<!-- 5-Item Modern Glassmorphism Navigation Bar -->
 <div class="nav-bar">
-    <button class="nav-item" onclick="switchTab('boost', this)">🚀 Boost</button>
-    <button class="nav-item" onclick="switchTab('earn', this)">📋 Vazifalar</button>
-    <button class="nav-item active" onclick="switchTab('home', this)">🪙 Asosiy</button>
-    <button class="nav-item" onclick="switchTab('auction', this)">🔨 Auksion</button>
-    <button class="nav-item" onclick="switchTab('profile', this)" id="profile-nav-btn">👤 Profil</button>
-    <button class="nav-item hidden" onclick="switchTab('admin', this)" id="nav-admin">⚙️ Admin</button>
+    <button class="nav-item" onclick="switchTab('boost', this)">
+        <svg viewBox="0 0 24 24"><path d="M12 2l-5.5 9h11z"/><path d="M6.5 13h11l-5.5 9z" opacity=".7"/></svg>
+        BOOST
+    </button>
+    <button class="nav-item" onclick="switchTab('earn', this)">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+        VAZIFALAR
+    </button>
+    <button class="nav-item active" onclick="switchTab('home', this)">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M10 8l6 4-6 4V8z" fill="#142d1e"/></svg>
+        BOSISH
+    </button>
+    <button class="nav-item" onclick="switchTab('auction', this)">
+        <svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+        AUKSION
+    </button>
+    <button class="nav-item" onclick="switchTab('profile', this)">
+        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        PROFIL
+    </button>
+    <button class="nav-item hidden" onclick="switchTab('admin', this)" id="nav-admin">
+        <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.04.64.09.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+        ADMIN
+    </button>
 </div>
 
 <script>
@@ -362,7 +460,6 @@
     }
 
     function updateUI() {
-        document.getElementById("balance").innerText = balance;
         document.getElementById("top-balance").innerText = balance;
         document.getElementById("profile-balance").innerText = balance;
         document.getElementById("profile-name").innerText = userName;
@@ -398,6 +495,10 @@
             energy -= 1;
             saveData();
             updateUI();
+
+            if (window.Telegram && tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('light');
+            }
         }
     });
 
@@ -442,9 +543,9 @@
                     </div>
                     <div>
                         ${isDone ? 
-                            `<button class="btn" disabled style="background: #30363d; color:#8b949e; width:auto; padding:10px 14px;">Bajarilgan</button>` : 
+                            `<button class="btn" disabled style="background: rgba(255,255,255,0.2); color:#fff; width:auto; padding:10px 14px;">Bajarilgan</button>` : 
                             `<div style="display:flex; gap:6px;">
-                                <a href="${taskLink}" target="_blank" class="btn" style="text-decoration:none; padding:10px 12px; font-size:12px; background:#21262d; color:#fff;" onclick="markVisited('${taskId}')">Obuna</a>
+                                <a href="${taskLink}" target="_blank" class="btn" style="text-decoration:none; padding:10px 12px; font-size:12px; background:rgba(255,255,255,0.2); color:#fff;" onclick="markVisited('${taskId}')">Obuna</a>
                                 <button class="btn" style="padding:10px 12px; font-size:12px; background:#ffffff; color:#000;" onclick="verifyTask('${taskId}',${reward})">Tekshirish</button>
                              </div>`
                         }
@@ -576,7 +677,7 @@
                     </div>
 
                     <div class="card" style="margin: 15px 0;">
-                        <p style="display:flex; justify-content:space-width; width:100%; margin:0;"><span>Sizning stavkangiz:</span> <strong style="color:var(--gold-color);">${userHasBid} 🪙</strong></p>
+                        <p style="display:flex; justify-content:space-between; width:100%; margin:0;"><span>Sizning stavkangiz:</span> <strong style="color:var(--gold-color);">${userHasBid} 🪙</strong></p>
                     </div>
 
                     <h3 style="margin-bottom: 10px; font-size: 16px;">YETAKCHILAR</h3>
