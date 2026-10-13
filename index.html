@@ -189,7 +189,7 @@
     <button class="nav-item" onclick="switchTab('auction', this)">🔨 Auksion</button>
     <button class="nav-item" onclick="switchTab('boost', this)">🚀 Boost</button>
     <button class="nav-item" onclick="switchTab('profile', this)">👤 Profil</button>
-    <button id="nav-admin" class="nav-item" onclick="switchTab('admin', this)">⚙️ Admin</button>
+    <button id="nav-admin" class="nav-item hidden" onclick="switchTab('admin', this)">⚙️ Admin</button>
 </div>
 
 <script>
@@ -209,10 +209,9 @@
     let tg = window.Telegram.WebApp;
     tg.expand();
 
-    // Agar brauzerda ochilsa, sinov uchun avtomatik Admin ID ishlatiladi
     let user = tg.initDataUnsafe?.user;
     let userId = user ? user.id.toString() : ADMIN_ID;
-    let userName = user ? user.first_name : "Admin (Test)";
+    let userName = user ? user.first_name : "Admin";
 
     let balance = 0;
     let energy = 500;
@@ -247,6 +246,7 @@
         loadAuction();
     });
 
+    // Har Safar Tap qilinganda yoki ma'lumot o'zgarganda darhol bazaga yoziladi
     function saveData() {
         userRef.set({
             balance: balance,
@@ -271,8 +271,11 @@
         let refLink = `https://t.me/${botUsername}?start=ref_${userId}`;
         document.getElementById("ref-link-input").value = refLink;
 
-        // Admin panel har doim ochiq bo'ladi (test qilish uchun qulay)
-        document.getElementById("nav-admin").classList.remove("hidden");
+        if (userId === ADMIN_ID) {
+            document.getElementById("nav-admin").classList.remove("hidden");
+        } else {
+            document.getElementById("nav-admin").classList.add("hidden");
+        }
     }
 
     // --- NAVIGATION ---
@@ -288,11 +291,12 @@
         if (energy > 0) {
             balance += 1;
             energy -= 1;
-            saveData();
+            saveData(); // Har bir bosishda coinlar darhol bazaga saqlanadi
             updateUI();
         }
     });
 
+    // Energiya tiklanishi va har 10 sekundda bazaga sinxronizatsiya
     setInterval(() => {
         if (energy < maxEnergy) {
             energy += 1;
@@ -328,7 +332,7 @@
                 </div>`;
             });
             document.getElementById("tasks-list").innerHTML = html || "<p>Hozircha vazifalar yo'q.</p>";
-            document.getElementById("admin-tasks-manage").innerHTML = adminHtml;
+            document.getElementById("admin-tasks-manage").innerHTML = adminHtml || "<p style='font-size:12px; color:var(--secondary-text);'>Vazifalar yo'q</p>";
         });
     }
 
