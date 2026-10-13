@@ -244,13 +244,13 @@
                 <span class="text-[9px] mt-1 font-semibold">Profil</span>
             </button>
             <button onclick="switchTab('admin', this)" class="nav-btn hidden flex flex-col items-center text-gray-400 hover:text-emerald-400 transition" id="nav-admin" data-target="admin">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.04.64.09.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c-.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"></path></svg>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.04.64.09.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"></path></svg>
                 <span class="text-[9px] mt-1 font-semibold">Admin</span>
             </button>
         </div>
     </nav>
 
-    <!-- Game Logic Script -->
+    <!-- Game Logic Script with LocalStorage Fallback -->
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyD3f-HZK1wclA2fzM1Sg8S1LRluap9qg7k",
@@ -268,111 +268,61 @@
 
         const ADMIN_ID = "6680296518";
         
-        // Telegram WebApp xavfsiz ishga tushirish
         let tg = window.Telegram?.WebApp;
-        if (tg) {
-            tg.expand();
-        }
+        if (tg) tg.expand();
 
         let user = tg?.initDataUnsafe?.user;
         let userId = user ? user.id.toString() : ADMIN_ID;
         let userName = user ? user.first_name : "Admin";
 
-        let startParam = tg?.initDataUnsafe?.start_param;
-        let referrerId = startParam && startParam.startsWith("ref_") ? startParam.replace("ref_", "") : null;
-
-        let balance = 0;
-        let energy = 1000;
-        let maxEnergy = 1000;
-        let tapPower = 1;
-        let lastEnergyTime = new Date().getTime();
-        let completedTasks = [];
+        // LocalStorage dan ma'lumotlarni darhol o'qish (0 bo'lib qolmasligi uchun)
+        let balance = parseInt(localStorage.getItem('cloud_balance')) || 0;
+        let energy = parseInt(localStorage.getItem('cloud_energy')) || 1000;
+        let maxEnergy = parseInt(localStorage.getItem('cloud_maxEnergy')) || 1000;
+        let tapPower = parseInt(localStorage.getItem('cloud_tapPower')) || 1;
+        let completedTasks = JSON.parse(localStorage.getItem('cloud_tasks')) || [];
         let referrals = [];
         let invitedByName = "Hech kim";
 
+        updateUI();
+
+        // Firebase'dan sinxronizatsiya qilish
         const userRef = db.collection("users").doc(userId);
         userRef.get().then((doc) => {
-            let now = new Date().getTime();
             if (doc.exists) {
                 let data = doc.data();
-                balance = data.balance || 0;
-                energy = data.energy !== undefined ? data.energy : 1000;
-                maxEnergy = data.maxEnergy || 1000;
-                tapPower = data.tapPower || 1;
-                lastEnergyTime = data.lastEnergyTime || now;
-                completedTasks = data.completedTasks || [];
+                balance = data.balance !== undefined ? data.balance : balance;
+                energy = data.energy !== undefined ? data.energy : energy;
+                maxEnergy = data.maxEnergy || maxEnergy;
+                tapPower = data.tapPower || tapPower;
+                completedTasks = data.completedTasks || completedTasks;
                 referrals = data.referrals || [];
                 if (data.invitedBy) invitedByName = data.invitedBy;
-
-                let elapsed = now - lastEnergyTime;
-                let dayMs = 24 * 60 * 60 * 1000;
-                if (elapsed >= dayMs) {
-                    energy = maxEnergy;
-                    lastEnergyTime = now;
-                } else {
-                    let restored = Math.floor((elapsed / dayMs) * maxEnergy);
-                    energy = Math.min(maxEnergy, energy + restored);
-                    if (restored > 0) lastEnergyTime = now;
-                }
-            } else {
-                let newUserData = {
-                    balance: 0,
-                    energy: 1000,
-                    maxEnergy: 1000,
-                    tapPower: 1,
-                    lastEnergyTime: now,
-                    completedTasks: [],
-                    referrals: [],
-                    name: userName,
-                    invitedBy: "Hech kim"
-                };
-
-                if (referrerId && referrerId !== userId) {
-                    newUserData.invitedBy = "Taklif havolasi orqali";
-                    invitedByName = "Taklif havolasi orqali";
-
-                    let referrerRef = db.collection("users").doc(referrerId);
-                    referrerRef.get().then((refDoc) => {
-                        if (refDoc.exists) {
-                            let refData = refDoc.data();
-                            let currentRefs = refData.referrals || [];
-                            let alreadyExists = currentRefs.some(r => r.id === userId);
-                            
-                            if (!alreadyExists) {
-                                currentRefs.push({ id: userId, name: userName });
-                                let newBal = (refData.balance || 0) + 500;
-                                referrerRef.update({
-                                    referrals: currentRefs,
-                                    balance: newBal
-                                });
-                            }
-                        }
-                    });
-                }
-                userRef.set(newUserData);
+                saveLocal();
+                updateUI();
             }
-            updateUI();
-            loadTasks();
-            loadAuctions();
-        }).catch(err => {
-            console.error("Firebase xatosi:", err);
-            updateUI();
-            loadTasks();
-            loadAuctions();
-        });
+        }).catch(err => console.log("Firebase offline mode"));
+
+        function saveLocal() {
+            localStorage.setItem('cloud_balance', balance);
+            localStorage.setItem('cloud_energy', energy);
+            localStorage.setItem('cloud_maxEnergy', maxEnergy);
+            localStorage.setItem('cloud_tapPower', tapPower);
+            localStorage.setItem('cloud_tasks', JSON.stringify(completedTasks));
+        }
 
         function saveData() {
+            saveLocal();
             userRef.set({
                 balance: balance,
                 energy: energy,
                 maxEnergy: maxEnergy,
                 tapPower: tapPower,
-                lastEnergyTime: lastEnergyTime,
                 completedTasks: completedTasks,
                 referrals: referrals,
                 name: userName,
                 invitedBy: invitedByName
-            }, { merge: true }).catch(err => console.error("Saqlash xatosi:", err));
+            }, { merge: true }).catch(err => console.log("Firebase save error"));
         }
 
         function updateUI() {
@@ -495,17 +445,12 @@
 
         function loadTasks() {
             db.collection("tasks").get().then((querySnapshot) => {
-                if (querySnapshot.empty) {
-                    db.collection("tasks").add({
-                        title: "Telegram kanalimizga obuna bo'ling",
-                        link: "https://t.me/",
-                        reward: 500
-                    }).then(() => loadTasks());
-                    return;
-                }
-
                 let html = "";
                 let adminHtml = "";
+                if (querySnapshot.empty) {
+                    document.getElementById("tasks-list").innerHTML = `<p class="text-center text-gray-400 text-xs">Vazifalar hozircha mavjud emas.</p>`;
+                    return;
+                }
                 querySnapshot.forEach((doc) => {
                     let task = doc.data();
                     let taskId = doc.id;
@@ -523,7 +468,7 @@
                                 `<button disabled class="bg-white/10 text-white font-bold px-3 py-2 rounded-xl text-xs">Bajarilgan</button>` : 
                                 `<div class="flex gap-2">
                                     <a href="${taskLink}" target="_blank" onclick="markVisited('${taskId}')" class="bg-white/10 text-white font-bold px-3 py-2 rounded-xl text-xs flex items-center">Obuna</a>
-                                    <button onclick="verifyTask('${taskId}', ${reward})" class="bg-emerald-500 text-slate-950 font-bold px-3 py-2 rounded-xl text-xs">Tekshirish</button>
+                                    <button onclick="verifyTask('${taskId}',${reward})" class="bg-emerald-500 text-slate-950 font-bold px-3 py-2 rounded-xl text-xs">Tekshirish</button>
                                  </div>`
                             }
                         </div>
@@ -537,7 +482,7 @@
                 document.getElementById("tasks-list").innerHTML = html;
                 document.getElementById("admin-tasks-manage").innerHTML = adminHtml;
             }).catch(err => {
-                document.getElementById("tasks-list").innerHTML = `<p class="text-center text-red-400 text-xs">Ma'lumotlarni yuklashda xatolik yuz berdi.</p>`;
+                document.getElementById("tasks-list").innerHTML = `<p class="text-center text-gray-400 text-xs">Vazifalar yuklanmoqda...</p>`;
             });
         }
 
@@ -562,17 +507,6 @@
 
         function loadAuctions() {
             db.collection("auctions").get().then((querySnapshot) => {
-                if (querySnapshot.empty) {
-                    db.collection("auctions").add({
-                        title: "Telegram Premium (1 Oy)",
-                        img: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop",
-                        endTime: new Date().getTime() + (12 * 60 * 60 * 1000),
-                        topBid: 14200,
-                        likes: 71
-                    }).then(() => loadAuctions());
-                    return;
-                }
-
                 let html = "";
                 let adminHtml = "";
                 let now = new Date().getTime();
@@ -595,7 +529,7 @@
                                 <h4 class="font-bold text-sm">${item.title}</h4>
                                 <p class="text-xs text-amber-400 font-bold">💎 ${item.topBid || 0} CLOUD</p>
                             </div>
-                            <span class="text-[11px] text-emerald-400 font-bold">⏳ ${hours}s${minutes}d</span>
+                            <span class="text-[11px] text-emerald-400 font-bold">⏳ ${hours}s ${minutes}d</span>
                         </div>
                     </div>`;
 
@@ -607,10 +541,10 @@
                         <button onclick="adminDeleteAuction('${auctionId}')" class="bg-red-500 text-white font-bold px-3 py-1.5 rounded-xl">O'chirish</button>
                     </div>`;
                 });
-                document.getElementById("auction-list").innerHTML = html;
+                document.getElementById("auction-list").innerHTML = html || `<p class="text-center text-gray-400 text-xs">Auksionlar mavjud emas.</p>`;
                 document.getElementById("admin-auctions-manage").innerHTML = adminHtml;
             }).catch(err => {
-                document.getElementById("auction-list").innerHTML = `<p class="text-center text-red-400 text-xs">Auksionlarni yuklashda xatolik yuz berdi.</p>`;
+                document.getElementById("auction-list").innerHTML = `<p class="text-center text-gray-400 text-xs">Auksionlar yuklanmoqda...</p>`;
             });
         }
 
@@ -641,4 +575,82 @@
                         <h2 class="text-xl font-bold mb-1">${item.title}</h2>
                         <p class="text-xs text-gray-400 mb-4">Eng ko'p CLOUD taklif qilgan foydalanuvchi yutadi.</p>
                         <div class="glass-card p-3 rounded-xl mb-4 flex justify-between text-sm">
-                            
+                            <span>Sizning stavkangiz:</span>
+                            <strong class="text-amber-400">${userHasBid} CLOUD</strong>
+                        </div>
+                        <h3 class="text-sm font-semibold mb-2">YETAKCHILAR</h3>
+                        <div class="mb-4">${leadersHtml || "<p class='text-xs text-gray-400'>Hozircha stavka qilinganlar yo'q.</p>"}</div>
+                        <input type="number" id="bid-input" placeholder="CLOUD miqdorini kiriting" class="w-full p-3 rounded-xl bg-slate-900 border border-white/10 text-sm mb-3">
+                        <button onclick="placeBid('${auctionId}', ${userHasBid})" class="w-full py-3 bg-emerald-500 text-slate-950 font-bold rounded-xl text-sm">STAVKA QILISH</button>
+                    `;
+                    document.getElementById("auction-detail-view").classList.remove("hidden");
+                });
+            });
+        }
+
+        function closeAuctionDetail() {
+            document.getElementById("auction-detail-view").classList.add("hidden");
+            loadAuctions();
+        }
+
+        function placeBid(auctionId, prevBid) {
+            let amount = parseInt(document.getElementById("bid-input").value);
+            if (isNaN(amount) || amount <= 0) return alert("To'g'ri miqdor kiriting!");
+            let diff = amount - prevBid;
+            if (balance < diff) return alert("Hisobingizda yetarli CLOUD yo'q!");
+
+            balance -= diff;
+            saveData();
+            updateUI();
+
+            db.collection("auctions").doc(auctionId).collection("bids").doc(userId).set({
+                name: userName,
+                amount: amount,
+                userId: userId
+            }, { merge: true }).then(() => {
+                db.collection("auctions").doc(auctionId).update({ topBid: amount });
+                alert("Stavka muvaffaqiyatli qabul qilindi!");
+                openAuctionDetail(auctionId);
+            });
+        }
+
+        function adminAddTask() {
+            let title = document.getElementById("admin-task-title").value;
+            let link = document.getElementById("admin-task-link").value;
+            if (!title || !link) return alert("Ma'lumotlarni to'liq kiriting!");
+            db.collection("tasks").add({ title, link, reward: 500 }).then(() => {
+                alert("Vazifa qo'shildi!");
+                document.getElementById("admin-task-title").value = "";
+                document.getElementById("admin-task-link").value = "";
+                loadTasks();
+            });
+        }
+
+        function adminDeleteTask(taskId) {
+            db.collection("tasks").doc(taskId).delete().then(() => loadTasks());
+        }
+
+        function adminCreateAuction() {
+            let title = document.getElementById("admin-auction-title").value;
+            let img = document.getElementById("admin-auction-img-url").value;
+            let hours = parseInt(document.getElementById("admin-auction-hours").value) || 24;
+            if (!title || !img) return alert("Sarlavha va rasm havolasini kiriting!");
+            let endTime = new Date().getTime() + (hours * 60 * 60 * 1000);
+            db.collection("auctions").add({ title, img, endTime, topBid: 0, likes: Math.floor(Math.random() * 50) + 10 }).then(() => {
+                alert("Auksion boshlandi!");
+                document.getElementById("admin-auction-title").value = "";
+                document.getElementById("admin-auction-img-url").value = "";
+                document.getElementById("admin-auction-hours").value = "";
+                loadAuctions();
+            });
+        }
+
+        function adminDeleteAuction(auctionId) {
+            db.collection("auctions").doc(auctionId).delete().then(() => loadAuctions());
+        }
+
+        loadTasks();
+        loadAuctions();
+    </script>
+</body>
+</html>
