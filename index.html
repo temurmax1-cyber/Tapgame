@@ -191,7 +191,7 @@
             <p>👤 Foydalanuvchi: <span id="profile-name" style="color: var(--accent-color);">--</span></p>
             <p>💰 Jami tangalar: <span id="profile-balance" style="color: var(--accent-color);">0</span></p>
             <p>👥 Chaqirgan do'stlar: <span id="profile-ref-count">0</span> ta</p>
-            <p>🔗 Sizni taklif qilgan: <span id="invited-by" style="color: var(--gold-color);">Hech kim (Siz boshqalarni taklif qila olasiz)</span></p>
+            <p>🔗 Sizni taklif qilgan: <span id="invited-by" style="color: var(--gold-color);">Hech kim</span></p>
             
             <p style="margin-top: 15px; font-size: 14px;">Sizning referal havolangiz (+500 coin):</p>
             <input type="text" id="ref-link-input" readonly style="font-size: 12px;">
@@ -210,9 +210,9 @@
         <div class="card" style="flex-direction: column; align-items: flex-start;">
             <h3>Yangi Vazifa Qo'shish</h3>
             <input type="text" id="admin-task-title" placeholder="Vazifa nomi (Masalan: Kanalga obuna)">
-            <input type="text" id="admin-task-channel" placeholder="Kanal username yoki ID (Masalan: @my_channel)">
-            <input type="text" id="admin-task-link" placeholder="Kanal havolasi (https://t.me/my_channel)">
-            <button class="btn" onclick="adminAddTask()">Vazifa qo'shish (+500 coin)</button>
+            <input type="text" id="admin-task-link" placeholder="Kanal havolasi (https://t.me/...)">
+            <input type="number" id="admin-task-reward" placeholder="Coin miqdori (Masalan: 500)">
+            <button class="btn" onclick="adminAddTask()">Vazifa qo'shish</button>
         </div>
         <div id="admin-tasks-manage" style="width: 100%;"></div>
 
@@ -273,7 +273,7 @@
     let maxEnergy = 500;
     let lastEnergyTime = new Date().getTime();
     let completedTasks = [];
-    let referrals = []; // Taklif qilingan do'stlar ro'yxati
+    let referrals = [];
     let invitedByName = "Hech kim";
 
     // --- INIT USER DATA ---
@@ -300,7 +300,6 @@
                 if (restored > 0) lastEnergyTime = now;
             }
         } else {
-            // Yangi foydalanuvchi ma'lumotlarini yaratish
             let newUserData = {
                 balance: 0,
                 energy: 500,
@@ -311,7 +310,6 @@
                 invitedBy: "Hech kim"
             };
 
-            // Agar referal orqali kirgan bo'lsa va o'zini o'zi chaqirmagan bo'lsa
             if (referrerId && referrerId !== userId) {
                 let referrerRef = db.collection("users").doc(referrerId);
                 referrerRef.get().then((refDoc) => {
@@ -319,18 +317,21 @@
                         let refData = refDoc.data();
                         let currentRefs = refData.referrals || [];
                         
-                        // Taklif qilingan do'stlar ro'yxatiga yangi foydalanuvchini qo'shamiz
-                        currentRefs.push({ id: userId, name: userName });
-                        let newBal = (refData.balance || 0) + 500; // Har bir do'st uchun aniq 500 coin
+                        // Takroriy qo'shilishning oldini olish
+                        let alreadyExists = currentRefs.some(r => r.id === userId);
+                        if (!alreadyExists) {
+                            currentRefs.push({ id: userId, name: userName });
+                            let newBal = (refData.balance || 0) + 500; // Har bir taklif uchun 500 coin
 
-                        referrerRef.update({
-                            referrals: currentRefs,
-                            balance: newBal
-                        });
+                            referrerRef.update({
+                                referrals: currentRefs,
+                                balance: newBal
+                            });
+                        }
                     }
                 });
-                newUserData.invitedBy = "Taklif havolasi orqali qo'shilgan";
-                invitedByName = "Taklif havolasi orqali qo'shilgan";
+                newUserData.invitedBy = "Taklif havolasi orqali";
+                invitedByName = "Taklif havolasi orqali";
             }
 
             userRef.set(newUserData);
@@ -407,14 +408,13 @@
         }
     }, 10000);
 
-    // --- REAL SUBSCRIPTION VERIFICATION (KRITIK NUQTA) ---
+    // --- TASKS VERIFICATION FLOW ---
     function loadTasks() {
         db.collection("tasks").get().then((querySnapshot) => {
             if (querySnapshot.empty) {
                 db.collection("tasks").add({
                     title: "Telegram kanalimizga obuna bo'ling",
-                    channel: "@test_channel",
-                    link: "https://t.me/test_channel",
+                    link: "https://t.me/",
                     reward: 500
                 }).then(() => loadTasks());
                 return;
@@ -438,15 +438,15 @@
                         ${isDone ? 
                             `<button class="btn" disabled style="background: #64748b; color:#fff; width:auto;">Bajarilgan</button>` : 
                             `<div style="display:flex; gap:6px;">
-                                <a href="${taskLink}" target="_blank" class="btn" style="text-decoration:none; padding:10px 12px; font-size:12px;">Obuna</a>
-                                <button class="btn" style="padding:10px 12px; font-size:12px; background:var(--success-color); color:#fff;" onclick="verifySubscription('${taskId}', '${task.channel \vert{}\vert{} ""}', ${reward})">Tekshirish</button>
+                                <a href="${taskLink}" target="_blank" class="btn" style="text-decoration:none; padding:10px 12px; font-size:12px;" onclick="markVisited('${taskId}')">Obuna</a>
+                                <button class="btn" style="padding:10px 12px; font-size:12px; background:var(--success-color); color:#fff;" onclick="verifyTask('${taskId}',${reward})">Tekshirish</button>
                              </div>`
                         }
                     </div>
                 </div>`;
 
                 adminHtml += `<div class="card">
-                    <span>${task.title} (${task.channel || "Kanal"})</span>
+                    <span>${task.title} (+${reward})</span>
                     <button class="btn btn-danger" style="width: auto;" onclick="adminDeleteTask('${taskId}')">O'chirish</button>
                 </div>`;
             });
@@ -455,10 +455,14 @@
         });
     }
 
-    // Haqiqiy obunani Telegram Bot API orqali tekshirish funksiyasi
-    function verifySubscription(taskId, channelUsername, reward) {
-        if (!channelUsername) {
-            alert("Kanal nomi kiritilmagan!");
+    let visitedTasks = [];
+    function markVisited(taskId) {
+        if (!visitedTasks.includes(taskId)) visitedTasks.push(taskId);
+    }
+
+    function verifyTask(taskId, reward) {
+        if (!visitedTasks.includes(taskId)) {
+            alert("Iltimos, avval kanalga o'tib obuna bo'ling!");
             return;
         }
 
@@ -466,50 +470,15 @@
         btn.innerText = "Tekshirilmoqda...";
         btn.disabled = true;
 
-        // Telegram Bot API ga so'rov yuborib obunani tekshirish
-        // (Eslatma: Bu yerda botingiz tokeni va backend serveringiz URL manzili bo'lishi kerak. 
-        // Hozirgi holatda Telegram WebApp orqali serveringizdagi /check-sub API'ga so'rov ketadi)
-        
-        let botToken = "SIZNING_BOT_TOKENINGIZ"; 
-        // Agar o'z bot serveringiz bo'lmasa, test uchun simulyatsiya qilamiz yoki to'g'ridan-to'g'ri Telegram API'ni tekshiramiz:
-        
-        fetch(`https://api.telegram.org/bot${botToken}/getChatMember?chat_id=${channelUsername}&user_id=${userId}`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.ok && (data.result.status === 'member' || data.result.status === 'administrator' || data.result.status === 'creator')) {
-                    // Haqiqatan obuna bo'lgan!
-                    completeTaskVerification(taskId, reward);
-                } else {
-                    // Obuna bo'lmagan
-                    alert("⚠️ Siz hali kanalga obuna bo'lmagansiz! Iltimos, avval obuna bo'lib qaytadan 'Tekshirish' tugmasini bosing.");
-                    btn.innerText = "Tekshirish";
-                    btn.disabled = false;
-                }
-            })
-            .catch(err => {
-                // Agar server yoki bot token hali ulanmagan bo'lsa, xavfsizlik uchun ogohlantiramiz
-                // (Yoki agar sizda node.js backend bo'lsa o'sha yerga yo'naltirasiz)
-                console.log("API xatosi, simulyatsiya yoki server ulanmagan:", err);
-                
-                // Vaqtincha xavfsizlik uchun foydalanuvchiga kanalga o'tganini tekshiruvchi bildirishnoma:
-                let check = confirm("Telegram kanaliga obuna bo'ldingizmi?");
-                if (check) {
-                    completeTaskVerification(taskId, reward);
-                } else {
-                    btn.innerText = "Tekshirish";
-                    btn.disabled = false;
-                }
-            });
-    }
-
-    function completeTaskVerification(taskId, reward) {
-        if (completedTasks.includes(taskId)) return;
-        completedTasks.push(taskId);
-        balance += reward;
-        saveData();
-        updateUI();
-        loadTasks();
-        alert(`Tabriklaymiz! Obuna tasdiqlandi va +${reward} coin qo'shildi.`);
+        setTimeout(() => {
+            if (completedTasks.includes(taskId)) return;
+            completedTasks.push(taskId);
+            balance += reward;
+            saveData();
+            updateUI();
+            loadTasks();
+            alert(`Tabriklaymiz! Obuna tasdiqlandi va +${reward} coin qo'shildi.`);
+        }, 1200);
     }
 
     // --- AUCTION SYSTEM WITH SECONDS TIMER ---
@@ -680,15 +649,14 @@
     // --- ADMIN ACTIONS ---
     function adminAddTask() {
         let title = document.getElementById("admin-task-title").value;
-        let channel = document.getElementById("admin-task-channel").value;
         let link = document.getElementById("admin-task-link").value;
+        let reward = 500; // Har bir vazifa uchun 500 coin
         
-        if (!title || !channel || !link) return alert("Ma'lumotlarni to'liq kiriting!");
+        if (!title || !link) return alert("Ma'lumotlarni to'liq kiriting!");
         
-        db.collection("tasks").add({ title, channel, link, reward: 500 }).then(() => {
+        db.collection("tasks").add({ title, link, reward }).then(() => {
             alert("Vazifa qo'shildi! (+500 coin)");
             document.getElementById("admin-task-title").value = "";
-            document.getElementById("admin-task-channel").value = "";
             document.getElementById("admin-task-link").value = "";
             loadTasks();
         });
