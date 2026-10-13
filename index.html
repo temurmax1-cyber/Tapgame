@@ -244,13 +244,13 @@
                 <span class="text-[9px] mt-1 font-semibold">Profil</span>
             </button>
             <button onclick="switchTab('admin', this)" class="nav-btn hidden flex flex-col items-center text-gray-400 hover:text-emerald-400 transition" id="nav-admin" data-target="admin">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.04.64.09.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"></path></svg>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.04.64.09.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c-.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"></path></svg>
                 <span class="text-[9px] mt-1 font-semibold">Admin</span>
             </button>
         </div>
     </nav>
 
-    <!-- Game Logic Script with LocalStorage Fallback -->
+    <!-- Game Logic Script with Hybrid LocalStorage + Firebase -->
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyD3f-HZK1wclA2fzM1Sg8S1LRluap9qg7k",
@@ -267,7 +267,6 @@
         const db = firebase.firestore();
 
         const ADMIN_ID = "6680296518";
-        
         let tg = window.Telegram?.WebApp;
         if (tg) tg.expand();
 
@@ -275,7 +274,10 @@
         let userId = user ? user.id.toString() : ADMIN_ID;
         let userName = user ? user.first_name : "Admin";
 
-        // LocalStorage dan ma'lumotlarni darhol o'qish (0 bo'lib qolmasligi uchun)
+        let startParam = tg?.initDataUnsafe?.start_param;
+        let referrerId = startParam && startParam.startsWith("ref_") ? startParam.replace("ref_", "") : null;
+
+        // Hybrid saqlash: darhol localStorage dan o'qib turamiz
         let balance = parseInt(localStorage.getItem('cloud_balance')) || 0;
         let energy = parseInt(localStorage.getItem('cloud_energy')) || 1000;
         let maxEnergy = parseInt(localStorage.getItem('cloud_maxEnergy')) || 1000;
@@ -286,9 +288,10 @@
 
         updateUI();
 
-        // Firebase'dan sinxronizatsiya qilish
+        // Firebase Firestore dan foydalanuvchi ma'lumotlarini yuklab olish va sinxronlash
         const userRef = db.collection("users").doc(userId);
         userRef.get().then((doc) => {
+            let now = new Date().getTime();
             if (doc.exists) {
                 let data = doc.data();
                 balance = data.balance !== undefined ? data.balance : balance;
@@ -298,10 +301,52 @@
                 completedTasks = data.completedTasks || completedTasks;
                 referrals = data.referrals || [];
                 if (data.invitedBy) invitedByName = data.invitedBy;
-                saveLocal();
-                updateUI();
+            } else {
+                let newUserData = {
+                    balance: balance,
+                    energy: energy,
+                    maxEnergy: maxEnergy,
+                    tapPower: tapPower,
+                    lastEnergyTime: now,
+                    completedTasks: completedTasks,
+                    referrals: referrals,
+                    name: userName,
+                    invitedBy: "Hech kim"
+                };
+
+                if (referrerId && referrerId !== userId) {
+                    newUserData.invitedBy = "Taklif havolasi orqali";
+                    invitedByName = "Taklif havolasi orqali";
+
+                    let referrerRef = db.collection("users").doc(referrerId);
+                    referrerRef.get().then((refDoc) => {
+                        if (refDoc.exists) {
+                            let refData = refDoc.data();
+                            let currentRefs = refData.referrals || [];
+                            let alreadyExists = currentRefs.some(r => r.id === userId);
+                            
+                            if (!alreadyExists) {
+                                currentRefs.push({ id: userId, name: userName });
+                                let newBal = (refData.balance || 0) + 500;
+                                referrerRef.update({
+                                    referrals: currentRefs,
+                                    balance: newBal
+                                });
+                            }
+                        }
+                    });
+                }
+                userRef.set(newUserData);
             }
-        }).catch(err => console.log("Firebase offline mode"));
+            saveLocal();
+            updateUI();
+            loadTasks();
+            loadAuctions();
+        }).catch(err => {
+            console.log("Firebase offline, using LocalStorage");
+            loadTasks();
+            loadAuctions();
+        });
 
         function saveLocal() {
             localStorage.setItem('cloud_balance', balance);
@@ -448,7 +493,11 @@
                 let html = "";
                 let adminHtml = "";
                 if (querySnapshot.empty) {
-                    document.getElementById("tasks-list").innerHTML = `<p class="text-center text-gray-400 text-xs">Vazifalar hozircha mavjud emas.</p>`;
+                    db.collection("tasks").add({
+                        title: "Telegram kanalimizga obuna bo'ling",
+                        link: "https://t.me/",
+                        reward: 500
+                    }).then(() => loadTasks());
                     return;
                 }
                 querySnapshot.forEach((doc) => {
@@ -481,9 +530,7 @@
                 });
                 document.getElementById("tasks-list").innerHTML = html;
                 document.getElementById("admin-tasks-manage").innerHTML = adminHtml;
-            }).catch(err => {
-                document.getElementById("tasks-list").innerHTML = `<p class="text-center text-gray-400 text-xs">Vazifalar yuklanmoqda...</p>`;
-            });
+            }).catch(err => console.log("Tasks load error"));
         }
 
         let visitedTasks = [];
@@ -510,6 +557,17 @@
                 let html = "";
                 let adminHtml = "";
                 let now = new Date().getTime();
+
+                if (querySnapshot.empty) {
+                    db.collection("auctions").add({
+                        title: "Telegram Premium (1 Oy)",
+                        img: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop",
+                        endTime: new Date().getTime() + (12 * 60 * 60 * 1000),
+                        topBid: 14200,
+                        likes: 71
+                    }).then(() => loadAuctions());
+                    return;
+                }
 
                 querySnapshot.forEach((doc) => {
                     let item = doc.data();
@@ -541,11 +599,9 @@
                         <button onclick="adminDeleteAuction('${auctionId}')" class="bg-red-500 text-white font-bold px-3 py-1.5 rounded-xl">O'chirish</button>
                     </div>`;
                 });
-                document.getElementById("auction-list").innerHTML = html || `<p class="text-center text-gray-400 text-xs">Auksionlar mavjud emas.</p>`;
+                document.getElementById("auction-list").innerHTML = html;
                 document.getElementById("admin-auctions-manage").innerHTML = adminHtml;
-            }).catch(err => {
-                document.getElementById("auction-list").innerHTML = `<p class="text-center text-gray-400 text-xs">Auksionlar yuklanmoqda...</p>`;
-            });
+            }).catch(err => console.log("Auctions load error"));
         }
 
         function openAuctionDetail(auctionId) {
@@ -578,7 +634,7 @@
                             <span>Sizning stavkangiz:</span>
                             <strong class="text-amber-400">${userHasBid} CLOUD</strong>
                         </div>
-                        <h3 class="text-sm font-semibold mb-2">YETAKCHILAR</h3>
+                        <h3 class="text-sm font-semibold mb-2">YETACHILAR</h3>
                         <div class="mb-4">${leadersHtml || "<p class='text-xs text-gray-400'>Hozircha stavka qilinganlar yo'q.</p>"}</div>
                         <input type="number" id="bid-input" placeholder="CLOUD miqdorini kiriting" class="w-full p-3 rounded-xl bg-slate-900 border border-white/10 text-sm mb-3">
                         <button onclick="placeBid('${auctionId}', ${userHasBid})" class="w-full py-3 bg-emerald-500 text-slate-950 font-bold rounded-xl text-sm">STAVKA QILISH</button>
@@ -648,9 +704,6 @@
         function adminDeleteAuction(auctionId) {
             db.collection("auctions").doc(auctionId).delete().then(() => loadAuctions());
         }
-
-        loadTasks();
-        loadAuctions();
     </script>
 </body>
 </html>
