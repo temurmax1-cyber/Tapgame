@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CLOUD Coin - Tap Game</title>
+    
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
     <style>
         * {
             box-sizing: border-box;
@@ -25,7 +32,6 @@
             position: relative;
         }
 
-        /* Background glow effect */
         body::before {
             content: '';
             position: absolute;
@@ -39,7 +45,6 @@
             z-index: 0;
         }
 
-        /* Header section */
         .header {
             padding: 15px 20px;
             display: flex;
@@ -72,7 +77,6 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
-        /* Main Game/Content Area */
         .main-container {
             flex: 1;
             display: flex;
@@ -111,7 +115,6 @@
             text-shadow: 0 2px 10px rgba(250, 204, 21, 0.3);
         }
 
-        /* Center Custom Logo Button */
         .clicker-wrapper {
             position: relative;
             display: flex;
@@ -146,7 +149,6 @@
             border: 3px solid rgba(255, 255, 255, 0.2);
         }
 
-        /* Energy Bar */
         .energy-box {
             width: 100%;
             max-width: 320px;
@@ -177,9 +179,9 @@
             height: 100%;
             background: linear-gradient(90deg, #6366f1, #38bdf8);
             border-radius: 4px;
+            transition: width 0.2s ease;
         }
 
-        /* Modern Glassmorphism Bottom Navigation */
         .nav-bar {
             position: fixed;
             bottom: 12px;
@@ -235,75 +237,161 @@
 </head>
 <body>
 
-    <!-- Header -->
     <div class="header">
         <div class="app-title">CLOUD Coin</div>
         <div class="balance-badge">
-            <span>🪙</span> <span id="header-balance">1050</span>
+            <span>🪙</span> <span id="header-balance">0</span>
         </div>
     </div>
 
-    <!-- Main Content -->
     <div class="main-container">
         <div class="total-card">
             <span>Sizning Balansingiz</span>
-            <h2 id="main-balance">1050</h2>
+            <h2 id="main-balance">0</h2>
         </div>
 
-        <!-- Custom Logo Button -->
         <div class="clicker-wrapper">
             <button class="clicker-btn" id="clickBtn">
                 <img src="logo.jpeg" alt="Cloud Logo">
             </button>
         </div>
 
-        <!-- Energy Indicator -->
         <div class="energy-box">
             <div class="energy-info">
                 <span>Energiya:</span>
-                <span>471 / 500</span>
+                <span id="energy-text">500 / 500</span>
             </div>
             <div class="energy-bar-bg">
-                <div class="energy-bar-fill"></div>
+                <div class="energy-bar-fill" id="energyFill"></div>
             </div>
         </div>
     </div>
 
-    <!-- Clean Bottom Navigation -->
     <nav class="nav-bar">
         <a href="#" class="nav-item active">
             <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
             Asosiy
         </a>
-        <a href="#" class="nav-item">
+        <a href="vazifalar.html" class="nav-item">
             <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
             Vazifalar
         </a>
-        <a href="#" class="nav-item">
+        <a href="auksion.html" class="nav-item">
             <svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
             Auksion
         </a>
-        <a href="#" class="nav-item">
+        <a href="profil.html" class="nav-item">
             <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
             Profil
         </a>
     </nav>
 
     <script>
-        let balance = 1050;
-        const btn = document.getElementById('clickBtn');
+        // Firebase Konfiguratsiyasi (O'zingizning ma'lumotlaringiz)
+        const firebaseConfig = {
+            apiKey: "AIzaSyD...",
+            authDomain: "claude-coin.firebaseapp.com",
+            projectId: "claude-coin",
+            storageBucket: "claude-coin.appspot.com",
+            messagingSenderId: "...",
+            appId: "..."
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+
+        let userId = tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id.toString() : "test_user_" + Math.floor(Math.random() * 1000);
+        let balance = 0;
+        let energy = 500;
+        const maxEnergy = 500;
+
         const mainBalance = document.getElementById('main-balance');
         const headerBalance = document.getElementById('header-balance');
+        const energyText = document.getElementById('energy-text');
+        const energyFill = document.getElementById('energyFill');
+        const btn = document.getElementById('clickBtn');
 
-        btn.addEventListener('click', () => {
-            balance += 1;
+        // Foydalanuvchi ma'lumotlarini bazadan yuklash
+        async function loadUserData() {
+            try {
+                let userRef = db.collection('users').doc(userId);
+                let doc = await userRef.get();
+                if (doc.exists) {
+                    let data = doc.data();
+                    balance = data.balance || 0;
+                    energy = data.energy !== undefined ? data.energy : 500;
+                } else {
+                    // Yangi foydalanuvchi yaratish va referalni tekshirish
+                    let startParam = tg.initDataUnsafe ? tg.initDataUnsafe.start_param : null;
+                    await userRef.set({
+                        balance: 0,
+                        energy: 500,
+                        referredBy: startParam || null,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    // Agar referal orqali kirgan bo'lsa, taklif qilganga bonus yozish
+                    if (startParam && startParam !== userId) {
+                        let referrerRef = db.collection('users').doc(startParam);
+                        let referrerDoc = await referrerRef.get();
+                        if (referrerDoc.exists) {
+                            let refData = referrerDoc.data();
+                            await referrerRef.update({
+                                balance: (refData.balance || 0) + 500
+                            });
+                        }
+                    }
+                }
+                updateUI();
+            } catch (e) {
+                console.error("Ma'lumotlarni yuklashda xatolik: ", e);
+            }
+        }
+
+        function updateUI() {
             mainBalance.textContent = balance;
             headerBalance.textContent = balance;
-            
-            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
-                window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+            energyText.textContent = `${energy} / ${maxEnergy}`;
+            energyFill.style.width = `${(energy / maxEnergy) * 100}%`;
+        }
+
+        // Bosish mexanizmi
+        btn.addEventListener('click', async () => {
+            if (energy > 0) {
+                balance += 1;
+                energy -= 1;
+                updateUI();
+
+                if (window.Telegram && tg.HapticFeedback) {
+                    tg.HapticFeedback.impactOccurred('light');
+                }
+
+                // Firestore-ga saqlash
+                try {
+                    await db.collection('users').doc(userId).set({
+                        balance: balance,
+                        energy: energy
+                    }, { merge: true });
+                } catch (e) {
+                    console.error("Saqlashda xato: ", e);
+                }
             }
         });
+
+        // Energiyani vaqt o'tishi bilan tiklash
+        setInterval(() => {
+            if (energy < maxEnergy) {
+                energy += 1;
+                updateUI();
+            }
+        }, 1000);
+
+        loadUserData();
     </script>
 </body>
 </html>
