@@ -3,701 +3,428 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cloud Coin Tap Game</title>
+    <title>Claude Coin WebApp</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            user-select: none;
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-color: #38bdf8;
+            --text-color: #f8fafc;
+            --secondary-text: #94a3b8;
+            --danger-color: #ef4444;
+            --success-color: #22c55e;
         }
         body {
-            background: linear-gradient(135deg, #1b0f28 0%, #0d0714 100%);
-            color: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            height: 100vh;
-            height: 100dvh;
-            overflow: hidden;
-            padding: 15px 10px;
+            margin: 0; padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; padding-bottom: 70px;
         }
-        .header {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-            margin-top: 5px;
+        .container { width: 100%; max-width: 480px; padding: 16px; box-sizing: border-box; text-align: center; }
+        .hidden { display: none !important; }
+        
+        /* Balance */
+        .balance-card {
+            background: var(--card-bg); border-radius: 16px; padding: 20px;
+            margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
-        .brand-title {
-            font-size: 14px;
-            letter-spacing: 2px;
-            color: #d8b4fe;
-            font-weight: 600;
-            text-transform: uppercase;
+        .balance-title { font-size: 14px; color: var(--secondary-text); }
+        .balance-amount { font-size: 36px; font-weight: bold; color: var(--accent-color); margin-top: 5px; }
+
+        /* Tap section */
+        .tap-circle {
+            width: 200px; height: 200px; border-radius: 50%;
+            background: radial-gradient(circle, #38bdf8 0%, #0369a1 100%);
+            margin: 30px auto; display: flex; align-items: center; justify-content: center;
+            font-size: 32px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 0 30px rgba(56, 189, 248, 0.4);
+            user-select: none; transition: transform 0.1s;
         }
-        .balance-container {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 32px;
-            font-weight: 700;
-            color: #ffffff;
+        .tap-circle:active { transform: scale(0.95); }
+        .energy-bar-container { background: var(--card-bg); border-radius: 8px; height: 12px; width: 100%; overflow: hidden; margin-top: 10px; }
+        .energy-bar { background: var(--accent-color); height: 100%; width: 100%; transition: width 0.3s; }
+
+        /* Tabs content */
+        .section { display: none; width: 100%; }
+        .section.active { display: block; }
+
+        /* Cards & Lists */
+        .card {
+            background: var(--card-bg); border-radius: 12px; padding: 15px;
+            margin-bottom: 12px; text-align: left; display: flex;
+            justify-content: space-between; align-items: center;
         }
-        .balance-icon {
-            font-size: 28px;
+        .card img { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; margin-right: 10px; }
+        .btn {
+            background: var(--accent-color); color: #000; border: none;
+            padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer;
         }
-        .game-area {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-grow: 1;
-            width: 100%;
-        }
-        #coin {
-            width: 240px;
-            height: 240px;
-            background: radial-gradient(circle, #fde047 0%, #eab308 50%, #ca8a04 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 50px rgba(234, 179, 8, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.5);
-            cursor: pointer;
-            position: relative;
-            transition: transform 0.05s ease;
-            border: 4px solid #fef08a;
-        }
-        #coin:active {
-            transform: scale(0.94);
-        }
-        .coin-inner-ring {
-            width: 200px;
-            height: 200px;
-            border: 2px dashed rgba(133, 77, 14, 0.4);
-            border-radius: 50%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        .coin-text {
-            font-size: 16px;
-            font-weight: 800;
-            color: #713f12;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-        .coin-symbol {
-            font-size: 70px;
-            font-weight: bold;
-            color: #713f12;
-            line-height: 1;
-        }
-        .floating-score {
-            position: absolute;
-            font-size: 24px;
-            font-weight: bold;
-            color: #fde047;
-            animation: floatUp 0.8s ease-out forwards;
-            pointer-events: none;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
-        @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0) scale(0.8); }
-            100% { opacity: 0; transform: translateY(-70px) scale(1.2); }
-        }
-        .footer-section {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            align-items: center;
-            margin-bottom: 5px;
-        }
-        .energy-container {
-            width: 90%;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        .energy-info {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            font-weight: 600;
-            color: #e9d5ff;
-        }
-        .energy-bar-bg {
-            width: 100%;
-            height: 10px;
-            background: #2e1065;
-            border-radius: 10px;
-            padding: 2px;
-            border: 1px solid #581c87;
-        }
-        .energy-bar-fill {
-            height: 100%;
-            width: 100%;
-            background: linear-gradient(90deg, #f97316, #eab308);
-            border-radius: 6px;
-            transition: width 0.2s ease;
-        }
+        .btn-danger { background: var(--danger-color); color: #fff; }
+
+        /* Navigation */
         .nav-bar {
-            width: 100%;
-            background: rgba(30, 15, 50, 0.9);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(147, 51, 234, 0.3);
-            border-radius: 16px;
-            display: flex;
-            justify-content: space-around;
-            padding: 8px 4px;
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: var(--card-bg); display: flex; justify-content: space-around;
+            padding: 10px 0; border-top: 1px solid #334155; box-sizing: border-box; z-index: 1000;
         }
         .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 3px;
-            background: none;
-            border: none;
-            color: #cbd5e1;
-            font-size: 11px;
-            cursor: pointer;
-            transition: color 0.2s;
+            background: none; border: none; color: var(--secondary-text);
+            font-size: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px;
         }
-        .nav-item.active, .nav-item:hover {
-            color: #facc15;
-        }
-        .nav-icon {
-            font-size: 18px;
-        }
+        .nav-item.active { color: var(--accent-color); }
 
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(13, 7, 20, 0.85);
-            backdrop-filter: blur(8px);
-            z-index: 100;
-            justify-content: center;
-            align-items: flex-end;
-        }
-        .modal-content {
-            width: 100%;
-            max-height: 85vh;
-            background: #1e1033;
-            border-top-left-radius: 24px;
-            border-top-right-radius: 24px;
-            border: 1px solid rgba(147, 51, 234, 0.4);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            overflow-y: auto;
-            animation: slideUp 0.3s ease;
-        }
-        @keyframes slideUp {
-            from { transform: translateY(100%); }
-            to { transform: translateY(0); }
-        }
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 18px;
-            font-weight: bold;
-            color: #facc15;
-        }
-        .close-btn {
-            background: none;
-            border: none;
-            color: #94a3b8;
-            font-size: 22px;
-            cursor: pointer;
-        }
-        .card-item {
-            background: #2a1647;
-            border-radius: 12px;
-            padding: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            border: 1px solid rgba(147, 51, 234, 0.2);
-        }
-        .card-title {
-            font-size: 14px;
-            font-weight: bold;
-            color: white;
-        }
-        .card-desc {
-            font-size: 12px;
-            color: #cbd5e1;
-        }
-        .action-btn {
-            background: linear-gradient(135deg, #eab308, #ca8a04);
-            color: #1b0f28;
-            border: none;
-            border-radius: 8px;
-            padding: 10px;
-            font-weight: bold;
-            font-size: 13px;
-            cursor: pointer;
-        }
-        .auction-gift-img {
-            width: 100%;
-            height: 150px;
-            object-fit: cover;
-            border-radius: 10px;
-            border: 1px solid #581c87;
-        }
-        .leaderboard-list {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            max-height: 150px;
-            overflow-y: auto;
-        }
-        .leaderboard-item {
-            display: flex;
-            justify-content: space-between;
-            background: #1b0f28;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 13px;
-        }
-        .admin-panel {
-            display: none;
-            background: #3b0764;
-            border: 1px solid #9333ea;
-            padding: 12px;
-            border-radius: 12px;
-            margin-bottom: 10px;
-        }
-        .admin-input {
-            width: 100%;
-            padding: 8px;
-            border-radius: 6px;
-            border: none;
-            background: #1b0f28;
-            color: white;
-            margin-top: 5px;
-            font-size: 12px;
+        /* Inputs & Forms */
+        input, textarea {
+            width: 100%; padding: 10px; margin: 8px 0; border-radius: 8px;
+            border: 1px solid #334155; background: var(--bg-color); color: var(--text-color); box-sizing: border-box;
         }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="brand-title">Cloud Coin</div>
-        <div class="balance-container">
-            <span class="balance-icon">🪙</span>
-            <span id="score">0</span>
+<div class="container">
+    <!-- HOME SECTION -->
+    <div id="home-section" class="section active">
+        <div class="balance-card">
+            <div class="balance-title">Sizning Balansingiz</div>
+            <div class="balance-amount" id="balance">0</div>
+        </div>
+        <div class="tap-circle" id="tap-btn">TAP</div>
+        <div style="display: flex; justify-content: space-between; font-size: 14px; color: var(--secondary-text);">
+            <span>Energiya:</span>
+            <span id="energy-text">500 / 500</span>
+        </div>
+        <div class="energy-bar-container">
+            <div class="energy-bar" id="energy-bar"></div>
         </div>
     </div>
 
-    <div class="game-area">
-        <div id="coin">
-            <div class="coin-inner-ring">
-                <span class="coin-text">CLAUDE</span>
-                <span class="coin-symbol">C</span>
-            </div>
+    <!-- EARN / TASKS SECTION -->
+    <div id="earn-section" class="section">
+        <h2>Vazifalar</h2>
+        <div id="tasks-list"></div>
+    </div>
+
+    <!-- AUCTION SECTION -->
+    <div id="auction-section" class="section">
+        <h2>Auksion</h2>
+        <div id="active-auction" class="card" style="flex-direction: column; align-items: flex-start;">
+            <p>Hozircha faol auksion yo'q.</p>
+        </div>
+        <div class="card" style="flex-direction: column; align-items: flex-start;">
+            <h3>Stavka qilish</h3>
+            <p>Tikilgan stavkangiz: <span id="my-bid-display" style="color: var(--accent-color); font-weight: bold;">0</span> coin</p>
+            <input type="number" id="bid-amount-input" placeholder="Coin miqdorini kiriting">
+            <button class="btn" onclick="placeBid()">Stavka qo'yish</button>
         </div>
     </div>
 
-    <div class="footer-section">
-        <div class="energy-container">
-            <div class="energy-info">
-                <span>⚡ Energiya (24 soatlik limit)</span>
-                <span><span id="energy">500</span> / <span id="maxEnergy">500</span></span>
+    <!-- BOOST SECTION -->
+    <div id="boost-section" class="section">
+        <h2>Boost & Reklama</h2>
+        <div class="card">
+            <div>
+                <h4>Reklama ko'rish</h4>
+                <p style="font-size: 12px; color: var(--secondary-text);">Reklama ko'rib +100 coin oling</p>
             </div>
-            <div class="energy-bar-bg">
-                <div class="energy-bar-fill" id="energyBar"></div>
-            </div>
-        </div>
-
-        <div class="nav-bar">
-            <button class="nav-item active" onclick="openModal('tapModal')">
-                <span class="nav-icon">👆</span>
-                <span>Tap</span>
-            </button>
-            <button class="nav-item" onclick="openModal('boostModal')">
-                <span class="nav-icon">🔥</span>
-                <span>Boost</span>
-            </button>
-            <button class="nav-item" onclick="openModal('friendsModal')">
-                <span class="nav-icon">👥</span>
-                <span>Friends</span>
-            </button>
-            <button class="nav-item" onclick="openModal('earnModal')">
-                <span class="nav-icon">💰</span>
-                <span>Earn</span>
-            </button>
-            <button class="nav-item" onclick="openModal('auctionModal')">
-                <span class="nav-icon">🔨</span>
-                <span>Auksion</span>
-            </button>
+            <button class="btn" onclick="watchAd()">Ko'rish</button>
         </div>
     </div>
 
-    <!-- BOOST MODAL -->
-    <div class="modal" id="boostModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span>🔥 Boost & Reklama</span>
-                <button class="close-btn" onclick="closeModal('boostModal')">&times;</button>
-            </div>
-            <div class="card-item">
-                <div class="card-title">📺 Reklama ko'rib coin yig'ish</div>
-                <div class="card-desc">Reklama tomosha qiling va hisobingizga +100 coin qo'shib oling!</div>
-                <button class="action-btn" onclick="watchAd()">Reklama ko'rish (+100 Coin)</button>
-            </div>
+    <!-- PROFILE SECTION -->
+    <div id="profile-section" class="section">
+        <h2>Profil</h2>
+        <div class="balance-card" style="text-align: left;">
+            <p>👤 Foydalanuvchi: <span id="profile-name" style="color: var(--accent-color);">--</span></p>
+            <p>💰 Jami tangalar: <span id="profile-balance" style="color: var(--accent-color);">0</span></p>
+            <p>👥 Chaqirgan do'stlar: <span id="profile-ref-count">0</span> ta</p>
+            <p style="margin-top: 15px; font-size: 14px;">Sizning referal havolangiz:</p>
+            <input type="text" id="ref-link-input" readonly style="font-size: 12px;">
+            <button class="btn" onclick="copyRefLink()" style="width: 100%; margin-top: 5px;">Havolani nusxalash</button>
         </div>
     </div>
 
-    <!-- FRIENDS MODAL -->
-    <div class="modal" id="friendsModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span>👥 Do'stlarni taklif qilish</span>
-                <button class="close-btn" onclick="closeModal('friendsModal')">&times;</button>
-            </div>
-            <div class="card-item">
-                <div class="card-title">Har bir referal uchun 1000 coin</div>
-                <div class="card-desc">Sizning havolangiz orqali kirgan do'stlar: <span id="refCount">0</span> ta</div>
-                <button class="action-btn" onclick="copyRefLink()">Referal havoladan nusxa olish</button>
-            </div>
+    <!-- ADMIN SECTION -->
+    <div id="admin-section" class="section">
+        <h2>Admin Panel</h2>
+        <div class="card" style="flex-direction: column; align-items: flex-start;">
+            <h3>Yangi Vazifa Qo'shish</h3>
+            <input type="text" id="admin-task-title" placeholder="Vazifa nomi (Masalan: Kanalga obuna)">
+            <input type="text" id="admin-task-link" placeholder="Kanal / Havola linki">
+            <button class="btn" onclick="adminAddTask()">Vazifa qo'shish</button>
+        </div>
+        <div id="admin-tasks-manage" style="width: 100%;"></div>
+
+        <div class="card" style="flex-direction: column; align-items: flex-start; margin-top: 20px;">
+            <h3>Auksion Sovg'a Qo'shish</h3>
+            <input type="text" id="admin-auction-title" placeholder="Sovg'a nomi">
+            <label style="font-size: 12px; color: var(--secondary-text); margin-top: 5px;">Sovg'a rasmini tanlang:</label>
+            <input type="file" id="admin-auction-img-file" accept="image/*">
+            <button class="btn" onclick="adminCreateAuction()" style="margin-top: 10px;">Auksionni boshlash</button>
         </div>
     </div>
+</div>
 
-    <!-- EARN MODAL -->
-    <div class="modal" id="earnModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span>💰 Vazifalar (Earn)</span>
-                <button class="close-btn" onclick="closeModal('earnModal')">&times;</button>
-            </div>
-            <!-- ADMIN PANEL -->
-            <div class="admin-panel" id="adminEarnPanel">
-                <div style="font-weight:bold; color:#facc15; margin-bottom:5px;">🛠️ Admin: Kanal qo'shish</div>
-                <input type="text" id="channelName" class="admin-input" placeholder="Kanal nomi (masalan: Yangiliklar)">
-                <input type="text" id="channelLink" class="admin-input" placeholder="Kanal havolasi (https://t.me/...)">
-                <button class="action-btn" style="margin-top:8px; width:100%;" onclick="addChannel()">Kanalni qo'shish</button>
-            </div>
-            <div id="tasksList" style="display:flex; flex-direction:column; gap:10px;">
-                <!-- Dinamik kanallar -->
-            </div>
-        </div>
-    </div>
+<!-- NAVIGATION BAR -->
+<div class="nav-bar">
+    <button class="nav-item active" onclick="switchTab('home', this)">🏠 Asosiy</button>
+    <button class="nav-item" onclick="switchTab('earn', this)">📋 Vazifalar</button>
+    <button class="nav-item" onclick="switchTab('auction', this)">🔨 Auksion</button>
+    <button class="nav-item" onclick="switchTab('boost', this)">🚀 Boost</button>
+    <button class="nav-item" onclick="switchTab('profile', this)">👤 Profil</button>
+    <button id="nav-admin" class="nav-item hidden" onclick="switchTab('admin', this)">⚙️ Admin</button>
+</div>
 
-    <!-- AUCTION MODAL -->
-    <div class="modal" id="auctionModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span>🔨 Auksion (Sovg'alar & Giflar)</span>
-                <button class="close-btn" onclick="closeModal('auctionModal')">&times;</button>
-            </div>
-            <!-- ADMIN PANEL -->
-            <div class="admin-panel" id="adminAuctionPanel">
-                <div style="font-weight:bold; color:#facc15; margin-bottom:5px;">🛠️ Admin: Auksion sovg'asini o'zgartirish</div>
-                <input type="text" id="giftTitleInput" class="admin-input" placeholder="Sovg'a nomi">
-                <input type="text" id="giftImgInput" class="admin-input" placeholder="Rasm havolasi (URL)">
-                <button class="action-btn" style="margin-top:8px; width:100%;" onclick="updateAuctionGift()">Sovg'ani yangilash</button>
-            </div>
+<script>
+    // --- FIREBASE CONFIG ---
+    const firebaseConfig = {
+        apiKey: "AZzaSyAnB4d...", // O'zingizning firebaseConfig ma'lumotlaringizni shu yerga kiriting
+        authDomain: "claudecoin.firebaseapp.com",
+        projectId: "claudecoin",
+        storageBucket: "claudecoin.appspot.com",
+        messagingSenderId: "123456789",
+        appId: "1:123456:web:abcd"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-            <div class="card-item">
-                <div class="card-title" id="currentGiftTitle">🎁 Telegram Premium Sovg'a</div>
-                <img id="currentGiftImg" src="https://images.unsplash.com/photo-1513151233558-d860c5398176?w=500" class="auction-gift-img" alt="Sovg'a">
-                <div style="display:flex; flex-direction:column; gap:5px; margin-top:5px;">
-                    <input type="number" id="bidAmount" placeholder="Coin miqdorini kiriting" style="padding:10px; border-radius:8px; border:none; background:#1b0f28; color:white; font-size:13px;">
-                    <button class="action-btn" onclick="placeBid()">Stavka qo'yish</button>
-                </div>
-                <div style="font-size:10px; color:#cbd5e1; text-align:center; margin-top:2px;">*Kim eng koʻp coin taklif qilsa oʻsha yutadi</div>
-            </div>
+    const ADMIN_ID = 6680296518;
+    let tg = window.Telegram.WebApp;
+    tg.expand();
 
-            <div class="card-item">
-                <div class="card-title">🏆 Ishtirokchilar reytingi (Top stavkalar)</div>
-                <div class="leaderboard-list" id="leaderboardList"></div>
-            </div>
-        </div>
-    </div>
+    let user = tg.initDataUnsafe?.user || { id: 12345, first_name: "TestUser" };
+    let userId = user.id.toString();
 
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyD3f-HZK1wclA2fzM1Sg8S1LRluap9qg7k",
-            authDomain: "claude-coin.firebaseapp.com",
-            projectId: "claude-coin",
-            storageBucket: "claude-coin.firebasestorage.app",
-            messagingSenderId: "478948716667",
-            appId: "1:478948716667:web:d6ed5ddd8102e7bd0e72de",
-            measurementId: "G-84V124881S"
-        };
+    let balance = 0;
+    let energy = 500;
+    let maxEnergy = 500;
+    let myBid = 0;
+    let completedTasks = [];
+    let referralsCount = 0;
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+    // --- INIT USER DATA ---
+    const userRef = db.collection("users").doc(userId);
+    userRef.get().then((doc) => {
+        if (doc.exists) {
+            let data = doc.data();
+            balance = data.balance || 0;
+            energy = data.energy !== undefined ? data.energy : 500;
+            myBid = data.myBid || 0;
+            completedTasks = data.completedTasks || [];
+            referralsCount = data.referralsCount || 0;
+        } else {
+            userRef.set({
+                balance: 0,
+                energy: 500,
+                myBid: 0,
+                completedTasks: [],
+                referralsCount: 0,
+                name: user.first_name
+            });
+        }
+        updateUI();
+    });
 
-        let tg = window.Telegram && window.Telegram.WebApp;
-        let user = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
+    function saveData() {
+        userRef.update({
+            balance: balance,
+            energy: energy,
+            myBid: myBid,
+            completedTasks: completedTasks
+        });
+    }
+
+    function updateUI() {
+        document.getElementById("balance").innerText = balance;
+        document.getElementById("profile-balance").innerText = balance;
+        document.getElementById("profile-name").innerText = user.first_name;
+        document.getElementById("energy-text").innerText = `${energy} / ${maxEnergy}`;
+        document.getElementById("energy-bar").style.width = (energy / maxEnergy) * 100 + "%";
+        document.getElementById("my-bid-display").innerText = myBid;
+        document.getElementById("profile-ref-count").innerText = referralsCount;
         
-        // ID ni aniq matn ko'rinishida olish
-        let userId = user ? String(user.id) : 'guest_' + Math.floor(Math.random() * 100000);
-        let userName = user ? (user.first_name || 'Foydalanuvchi') : 'Mehmon';
+        let refLink = `https://t.me/YourBotName?start=ref_${userId}`;
+        document.getElementById("ref-link-input").value = refLink;
 
-        const ADMIN_ID = "6680296518";
+        if (Number(userId) === ADMIN_ID) {
+            document.getElementById("nav-admin").classList.remove("hidden");
+        }
+    }
 
-        let score = 0;
-        let energy = 500;
-        let maxEnergy = 500;
-        let refCount = 0;
+    // --- NAVIGATION ---
+    function switchTab(tabName, el) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        document.getElementById(`${tabName}-section`).classList.add('active');
+        el.classList.add('active');
+    }
 
-        const scoreEl = document.getElementById('score');
-        const energyEl = document.getElementById('energy');
-        const maxEnergyEl = document.getElementById('maxEnergy');
-        const energyBar = document.getElementById('energyBar');
-        const coin = document.getElementById('coin');
-
-        async function initUser() {
-            let userRef = db.collection('users').doc(userId);
-            let doc = await userRef.get();
-
-            let urlParams = new URLSearchParams(window.location.search);
-            let refParam = urlParams.get('start');
-
-            if (!doc.exists) {
-                let initialData = {
-                    name: userName,
-                    score: 0,
-                    energy: 500,
-                    lastReset: new Date().getTime(),
-                    refs: 0
-                };
-                await userRef.set(initialData);
-                score = 0;
-                energy = 500;
-
-                if (refParam && refParam.startsWith('ref_')) {
-                    let referrerId = refParam.replace('ref_', '');
-                    if (referrerId !== userId) {
-                        let referrerRef = db.collection('users').doc(referrerId);
-                        let refDoc = await referrerRef.get();
-                        if (refDoc.exists) {
-                            let refData = refDoc.data();
-                            await referrerRef.update({
-                                score: (refData.score || 0) + 1000,
-                                refs: (refData.refs || 0) + 1
-                            });
-                        }
-                    }
-                }
-            } else {
-                let data = doc.data();
-                score = data.score || 0;
-                energy = data.energy || 500;
-                refCount = data.refs || 0;
-                document.getElementById('refCount').innerText = refCount;
-
-                let now = new Date().getTime();
-                let lastReset = data.lastReset || now;
-                if (now - lastReset > 24 * 60 * 60 * 1000) {
-                    energy = 500;
-                    await userRef.update({ energy: 500, lastReset: now });
-                }
-            }
+    // --- TAP LOGIC ---
+    document.getElementById("tap-btn").addEventListener("click", () => {
+        if (energy > 0) {
+            balance += 1;
+            energy -= 1;
+            saveData();
             updateUI();
-            checkAdmin();
         }
+    });
 
-        function updateUI() {
-            scoreEl.innerText = score.toLocaleString();
-            energyEl.innerText = energy;
-            maxEnergyEl.innerText = maxEnergy;
-            energyBar.style.width = ((energy / maxEnergy) * 100) + '%';
+    setInterval(() => {
+        if (energy < maxEnergy) {
+            energy += 1;
+            saveData();
+            updateUI();
         }
+    }, 5000);
 
-        async function saveUserData() {
-            await db.collection('users').doc(userId).set({
-                name: userName,
-                score: score,
-                energy: energy
-            }, { merge: true });
-        }
+    // --- TASKS / EARN ---
+    function loadTasks() {
+        db.collection("tasks").get().then((querySnapshot) => {
+            let html = "";
+            let adminHtml = "";
+            querySnapshot.forEach((doc) => {
+                let task = doc.data();
+                let taskId = doc.id;
+                let isDone = completedTasks.includes(taskId);
 
-        function checkAdmin() {
-            if (userId === ADMIN_ID) {
-                document.getElementById('adminEarnPanel').style.display = 'block';
-                document.getElementById('adminAuctionPanel').style.display = 'block';
-            }
-        }
+                html += `<div class="card">
+                    <div>
+                        <h4>${task.title}</h4>
+                        <p style="font-size: 12px; color: var(--secondary-text);">+500 Coin</p>
+                    </div>
+                    <button class="btn" ${isDone ? "disabled style='background: #64748b;'" : `onclick="completeTask('${taskId}', 500)"`}>
+                        ${isDone ? "Bajarilgan" : "Bajarish"}
+                    </button>
+                </div>`;
 
-        coin.addEventListener('click', async (e) => {
-            if (energy >= 1) {
-                score += 1;
-                energy -= 1;
-                updateUI();
-                createFloatingText(e, `+1`);
-
-                if (tg && tg.HapticFeedback) {
-                    tg.HapticFeedback.impactOccurred('light');
+                if (Number(userId) === ADMIN_ID) {
+                    adminHtml += `<div class="card">
+                        <span>${task.title}</span>
+                        <button class="btn btn-danger" onclick="adminDeleteTask('${taskId}')">O'chirish</button>
+                    </div>`;
                 }
-                await saveUserData();
-            } else {
-                alert("Energiyangiz tugadi! 24 soatdan keyin yana to'ladi yoki Boost orqali to'ldirishingiz mumkin.");
+            });
+            document.getElementById("tasks-list").innerHTML = html || "<p>Hozircha vazifalar yo'q.</p>";
+            if (Number(userId) === ADMIN_ID) {
+                document.getElementById("admin-tasks-manage").innerHTML = adminHtml;
             }
         });
+    }
 
-        function createFloatingText(e, text) {
-            let rect = coin.getBoundingClientRect();
-            let x = e.clientX || (rect.left + rect.width / 2);
-            let y = e.clientY || (rect.top + rect.height / 2);
+    function completeTask(taskId, reward) {
+        if (completedTasks.includes(taskId)) return;
+        completedTasks.push(taskId);
+        balance += reward;
+        saveData();
+        updateUI();
+        loadTasks();
+        alert("Tabriklaymiz! 500 ta coin qo'shildi.");
+    }
 
-            let el = document.createElement('div');
-            el.className = 'floating-score';
-            el.innerText = text;
-            
-            let randomX = (Math.random() - 0.5) * 50;
-            el.style.left = (x + randomX - 15) + 'px';
-            el.style.top = (y - 30) + 'px';
-
-            document.body.appendChild(el);
-            setTimeout(() => el.remove(), 800);
+    // --- AUCTION ---
+    function placeBid() {
+        let amount = parseInt(document.getElementById("bid-amount-input").value);
+        if (isNaN(amount) || amount <= 0) {
+            alert("To'g'ri miqdor kiriting!");
+            return;
         }
-
-        function openModal(modalId) {
-            if(modalId === 'tapModal') return;
-            document.getElementById(modalId).style.display = 'flex';
-            if (modalId === 'auctionModal') loadAuctionData();
-            if (modalId === 'earnModal') loadChannels();
+        if (balance < amount) {
+            alert("Hisobingizda yetarli coin yo'q!");
+            return;
         }
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
+        balance -= amount;
+        myBid += amount;
+        saveData();
+        updateUI();
+        document.getElementById("bid-amount-input").value = "";
+        alert("Stavka muvaffaqiyatli qabul qilindi!");
+    }
 
-        async function watchAd() {
-            score += 100;
-            updateUI();
-            await saveUserData();
-            alert("Reklama ko'rildi! Hisobingizga +100 coin qo'shildi.");
-            closeModal('boostModal');
-        }
-
-        function copyRefLink() {
-            let botUsername = "Cloudcointapbot"; 
-            let refLink = `https://t.me/${botUsername}?start=ref_${userId}`;
-            navigator.clipboard.writeText(refLink);
-            alert("Referal havolangiz nusxalandi! Do'stlaringizga ulashing.");
-        }
-
-        async function addChannel() {
-            let name = document.getElementById('channelName').value;
-            let link = document.getElementById('channelLink').value;
-            if (!name || !link) {
-                alert("Barcha maydonlarni to'ldiring!");
-                return;
-            }
-            await db.collection('channels').add({ name, link, reward: 500 });
-            alert("Kanal muvaffaqiyatli qo'shildi!");
-            document.getElementById('channelName').value = '';
-            document.getElementById('channelLink').value = '';
-            loadChannels();
-        }
-
-        async function loadChannels() {
-            let list = document.getElementById('tasksList');
-            list.innerHTML = '';
-            let snapshot = await db.collection('channels').get();
-            snapshot.forEach(doc => {
-                let ch = doc.data();
-                list.innerHTML += `
-                    <div class="card-item">
-                        <div class="card-title">📢 ${ch.name}</div>
-                        <div class="card-desc">Kanalga obuna bo'ling va +${ch.reward} coin oling.</div>
-                        <button class="action-btn" onclick="completeTask('${ch.link}', ${ch.reward}, this)">Obuna bo'lish (+${ch.reward} Coin)</button>
-                    </div>
-                `;
-            });
-        }
-
-        async function completeTask(link, reward, btn) {
-            window.open(link, '_blank');
-            score += reward;
-            updateUI();
-            await saveUserData();
-            btn.innerText = "Bajarildi ✅";
-            btn.disabled = true;
-            btn.style.background = "#15803d";
-        }
-
-        async function updateAuctionGift() {
-            let title = document.getElementById('giftTitleInput').value;
-            let img = document.getElementById('giftImgInput').value;
-            if (!title || !img) {
-                alert("Ma'lumotlarni kiriting!");
-                return;
-            }
-            await db.collection('settings').doc('auction').set({ title, img });
-            alert("Auksion sovg'asi yangilandi!");
-            loadAuctionData();
-        }
-
-        async function loadAuctionData() {
-            let doc = await db.collection('settings').doc('auction').get();
+    function loadAuction() {
+        db.collection("auction").doc("active").get().then((doc) => {
             if (doc.exists) {
                 let data = doc.data();
-                document.getElementById('currentGiftTitle').innerText = "🎁 " + data.title;
-                document.getElementById('currentGiftImg').src = data.img;
-            }
-
-            let lbList = document.getElementById('leaderboardList');
-            lbList.innerHTML = '';
-            let usersSnapshot = await db.collection('users').orderBy('score', 'desc').limit(10).get();
-            let rank = 1;
-            usersSnapshot.forEach(uDoc => {
-                let uData = uDoc.data();
-                lbList.innerHTML += `
-                    <div class="leaderboard-item">
-                        <span>#${rank} ${uData.name}</span>
-                        <span style="color: #facc15; font-weight: bold;">${(uData.score || 0).toLocaleString()} Coin</span>
-                    </div>
+                document.getElementById("active-auction").innerHTML = `
+                    <img src="${data.img}" style="width:100%; height:150px; border-radius:8px; object-fit:cover; margin-bottom:10px;">
+                    <h3>${data.title}</h3>
                 `;
-                rank++;
-            });
-        }
+            }
+        });
+    }
 
-        async function placeBid() {
-            let bidInput = document.getElementById('bidAmount');
-            let amount = parseInt(bidInput.value);
-            if (isNaN(amount) || amount <= 0) {
-                alert("To'g'ri miqdor kiriting!");
-                return;
-            }
-            if (score < amount) {
-                alert("Hisobingizda yetarli coin yo'q!");
-                return;
-            }
-            score -= amount;
+    // --- BOOST / ADS ---
+    function watchAd() {
+        // Haqiqiy reklama SDK integratsiyasi shu yerga qo'shiladi. 
+        // Hozircha reklama ko'rilmagani uchun coin berishni blokladik:
+        let watched = confirm("Reklama ko'rishni boshlaysizmi?");
+        if (watched) {
+            // Agar foydalanuvchi reklamani oxirigacha ko'rsa:
+            balance += 100;
+            saveData();
             updateUI();
-            await saveUserData();
-            await db.collection('bids').add({
-                userId: userId,
-                name: userName,
-                amount: amount,
-                time: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            alert("Stavka muvaffaqiyatli qabul qilindi!");
-            bidInput.value = '';
-            loadAuctionData();
+            alert("Reklama ko'rildi! +100 coin qo'shildi.");
+        } else {
+            alert("Reklama ko'rilmadi, coin berilmadi!");
         }
+    }
 
-        initUser();
-    </script>
+    // --- PROFILE / REF ---
+    function copyRefLink() {
+        let input = document.getElementById("ref-link-input");
+        input.select();
+        document.execCommand("copy");
+        alert("Referal havola nusxalandi!");
+    }
+
+    // --- ADMIN ACTIONS ---
+    function adminAddTask() {
+        let title = document.getElementById("admin-task-title").value;
+        let link = document.getElementById("admin-task-link").value;
+        if (!title) return alert("Sarlavha kiriting!");
+        
+        db.collection("tasks").add({ title, link }).then(() => {
+            alert("Vazifa qo'shildi!");
+            document.getElementById("admin-task-title").value = "";
+            document.getElementById("admin-task-link").value = "";
+            loadTasks();
+        });
+    }
+
+    function adminDeleteTask(taskId) {
+        db.collection("tasks").doc(taskId).delete().then(() => {
+            alert("Vazifa o'chirildi!");
+            loadTasks();
+        });
+    }
+
+    function adminCreateAuction() {
+        let title = document.getElementById("admin-auction-title").value;
+        let fileInput = document.getElementById("admin-auction-img-file");
+        if (!title || fileInput.files.length === 0) return alert("Sarlavha va rasm tanlang!");
+
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            let base64Img = e.target.result;
+            db.collection("auction").doc("active").set({
+                title: title,
+                img: base64Img
+            }).then(() => {
+                alert("Auksionga sovg'a joylandi!");
+                loadAuction();
+            });
+        };
+        reader.readAsDataURL(fileInput.files[0]);
+    }
+
+    // Load initial data
+    loadTasks();
+    loadAuction();
+</script>
 </body>
 </html>
