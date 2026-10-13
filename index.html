@@ -8,6 +8,9 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap');
         
@@ -132,14 +135,14 @@
                         <h3 class="font-semibold text-sm">Telegram kanalga obuna bo'lish</h3>
                         <p class="text-xs text-emerald-400">+5,000 CLOUD</p>
                     </div>
-                    <button class="bg-emerald-500 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs active:scale-95 transition">Bajarish</button>
+                    <button onclick="completeTask('channel', 5000)" class="bg-emerald-500 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs active:scale-95 transition">Bajarish</button>
                 </div>
                 <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
                     <div>
                         <h3 class="font-semibold text-sm">Do'st taklif qilish bonusi</h3>
                         <p class="text-xs text-emerald-400">+500 CLOUD</p>
                     </div>
-                    <button class="bg-emerald-500 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs active:scale-95 transition">Olish</button>
+                    <button onclick="completeTask('referral_bonus', 500)" class="bg-emerald-500 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs active:scale-95 transition">Olish</button>
                 </div>
             </div>
         </div>
@@ -211,34 +214,92 @@
         </div>
     </nav>
 
-    <!-- Game Logic Script with LocalStorage Persistence -->
+    <!-- Game Logic with Firebase Firestore Integration -->
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Load saved state or default values
-        let gameState = {
-            balance: parseInt(localStorage.getItem('cloud_balance')) || 0,
-            energy: parseInt(localStorage.getItem('cloud_energy')) || 1000,
-            maxEnergy: parseInt(localStorage.getItem('cloud_maxEnergy')) || 1000,
-            level: parseInt(localStorage.getItem('cloud_level')) || 1,
-            tapPower: parseInt(localStorage.getItem('cloud_tapPower')) || 1,
-            profitPerHour: parseInt(localStorage.getItem('cloud_profit')) || 0
+        // Firebase Configuration (Sizning Firebase ma'lumotlaringiz)
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-EXAMPLE-KEY-REPLACE-ME",
+            authDomain: "cloudcoin-game.firebaseapp.com",
+            projectId: "cloudcoin-game",
+            storageBucket: "cloudcoin-game.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdef"
         };
 
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+
+        let userId = 'default_user';
+        let userName = 'Geymer';
+
         if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            const user = tg.initDataUnsafe.user;
-            document.getElementById('username').innerText = user.first_name || 'Geymer';
-            document.getElementById('user-initial').innerText = (user.first_name || 'U').charAt(0).toUpperCase();
+            userId = tg.initDataUnsafe.user.id.toString();
+            userName = tg.initDataUnsafe.user.first_name || 'Geymer';
+            document.getElementById('username').innerText = userName;
+            document.getElementById('user-initial').innerText = userName.charAt(0).toUpperCase();
         }
 
-        function saveState() {
-            localStorage.setItem('cloud_balance', gameState.balance);
-            localStorage.setItem('cloud_energy', gameState.energy);
-            localStorage.setItem('cloud_maxEnergy', gameState.maxEnergy);
-            localStorage.setItem('cloud_level', gameState.level);
-            localStorage.setItem('cloud_tapPower', gameState.tapPower);
-            localStorage.setItem('cloud_profit', gameState.profitPerHour);
+        let gameState = {
+            balance: 0,
+            energy: 1000,
+            maxEnergy: 1000,
+            level: 1,
+            tapPower: 1,
+            profitPerHour: 0,
+            completedTasks: []
+        };
+
+        const userDocRef = db.collection('users').doc(userId);
+
+        // Load data from Firestore
+        function loadUserData() {
+            userDocRef.get().then((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    gameState.balance = data.balance || 0;
+                    gameState.energy = data.energy !== undefined ? data.energy : 1000;
+                    gameState.maxEnergy = data.maxEnergy || 1000;
+                    gameState.level = data.level || 1;
+                    gameState.tapPower = data.tapPower || 1;
+                    gameState.profitPerHour = data.profitPerHour || 0;
+                    gameState.completedTasks = data.completedTasks || [];
+                } else {
+                    // Create new user in Firestore
+                    userDocRef.set({
+                        name: userName,
+                        balance: 0,
+                        energy: 1000,
+                        maxEnergy: 1000,
+                        level: 1,
+                        tapPower: 1,
+                        profitPerHour: 0,
+                        completedTasks: []
+                    });
+                }
+                updateUI();
+            }).catch((error) => {
+                console.log("Error loading user data:", error);
+            });
+        }
+
+        // Save data to Firestore
+        function saveUserData() {
+            userDocRef.set({
+                name: userName,
+                balance: gameState.balance,
+                energy: gameState.energy,
+                maxEnergy: gameState.maxEnergy,
+                level: gameState.level,
+                tapPower: gameState.tapPower,
+                profitPerHour: gameState.profitPerHour,
+                completedTasks: gameState.completedTasks
+            }, { merge: true });
         }
 
         function updateUI() {
@@ -259,7 +320,7 @@
             if (gameState.energy >= gameState.tapPower) {
                 gameState.balance += gameState.tapPower;
                 gameState.energy -= gameState.tapPower;
-                saveState();
+                saveUserData();
                 updateUI();
 
                 const rect = tapBtn.getBoundingClientRect();
@@ -281,7 +342,7 @@
         setInterval(() => {
             if (gameState.energy < gameState.maxEnergy) {
                 gameState.energy = Math.min(gameState.maxEnergy, gameState.energy + 2);
-                saveState();
+                saveUserData();
                 updateUI();
             }
         }, 1000);
@@ -290,14 +351,14 @@
             if (type === 'tap' && gameState.balance >= 1000) {
                 gameState.balance -= 1000;
                 gameState.tapPower += 1;
-                saveState();
+                saveUserData();
                 updateUI();
                 alert('Muvaffaqiyatli sotib olindi!');
             } else if (type === 'energy' && gameState.balance >= 2000) {
                 gameState.balance -= 2000;
                 gameState.maxEnergy += 500;
                 gameState.energy = gameState.maxEnergy;
-                saveState();
+                saveUserData();
                 updateUI();
                 alert('Energiya sig\'imi oshirildi!');
             } else {
@@ -305,9 +366,21 @@
             }
         }
 
+        function completeTask(taskId, reward) {
+            if (gameState.completedTasks.includes(taskId)) {
+                alert('Bu vazifa allaqachon bajarilgan!');
+                return;
+            }
+            gameState.balance += reward;
+            gameState.completedTasks.push(taskId);
+            saveUserData();
+            updateUI();
+            alert('Tabriklaymiz! +' + reward + ' CLOUD qo\'shildi.');
+        }
+
         function inviteFriend() {
             const botUsername = "Cloudcointapbot"; 
-            const inviteLink = `https://t.me/share/url?url=https://t.me/${botUsername}&text=CLOUD%20Coin%20o'y-iniga%20qo'shiling%20va%20500%20tanga%20bonus%20oling!`;
+            const inviteLink = `https://t.me/share/url?url=https://t.me/${botUsername}&text=CLOUD%20Coin%20o'yiniga%20qo'shiling%20va%20500%20tanga%20bonus%20oling!`;
             if (tg.openTelegramLink) {
                 tg.openTelegramLink(inviteLink);
             } else {
@@ -329,7 +402,8 @@
             });
         }
 
-        updateUI();
+        // Load data on startup
+        loadUserData();
     </script>
 </body>
 </html>
