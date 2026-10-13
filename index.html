@@ -30,7 +30,6 @@
         .container { width: 100%; max-width: 480px; padding: 20px; box-sizing: border-box; text-align: center; }
         .hidden { display: none !important; }
 
-        /* Notcoin style top balance */
         .top-balance-card {
             display: flex; justify-content: center; align-items: center; gap: 8px;
             background: rgba(22, 27, 34, 0.7); padding: 8px 18px; border-radius: 20px;
@@ -45,7 +44,6 @@
         .balance-title { font-size: 13px; color: var(--secondary-text); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
         .balance-amount { font-size: 48px; font-weight: 900; color: var(--text-color); margin-top: 5px; letter-spacing: -1px; }
 
-        /* Notcoin style big central logo clicker */
         .tap-circle {
             width: 260px; height: 260px; border-radius: 50%;
             background: transparent;
@@ -63,7 +61,6 @@
             transform: scale(0.92); 
         }
 
-        /* Energy section */
         .energy-container {
             width: 100%;
             padding: 0 10px;
@@ -79,7 +76,6 @@
         .section.active { display: block; }
         .section h2 { text-align: center; margin-bottom: 20px; font-weight: 800; font-size: 22px; }
 
-        /* Notcoin style cards */
         .auction-card {
             background: var(--card-bg); border-radius: 16px; overflow: hidden;
             margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.06);
@@ -125,19 +121,19 @@
         .btn:active { opacity: 0.8; }
         .btn-danger { background: var(--danger-color); color: #fff; }
 
-        /* Notcoin style Bottom Navigation Bar */
+        /* Clean 4-Item Professional Navigation Bar */
         .nav-bar {
             position: fixed; bottom: 0; left: 0; width: 100%;
             background: rgba(13, 17, 23, 0.95); display: flex; justify-content: space-around;
-            padding: 10px 4px; border-top: 1px solid rgba(255,255,255,0.06); box-sizing: border-box; z-index: 1000;
+            padding: 8px 10px; border-top: 1px solid rgba(255,255,255,0.06); box-sizing: border-box; z-index: 1000;
             backdrop-filter: blur(20px);
         }
         .nav-item {
             background: none; border: none; color: var(--secondary-text);
-            font-size: 11px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px;
-            font-weight: 600; flex: 1; padding: 6px 0; border-radius: 10px; transition: color 0.2s;
+            font-size: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px;
+            font-weight: 700; flex: 1; padding: 8px 0; border-radius: 12px; transition: all 0.2s;
         }
-        .nav-item.active { color: var(--text-color); background: rgba(255,255,255,0.05); }
+        .nav-item.active { color: var(--text-color); background: rgba(255,255,255,0.08); }
 
         input, textarea {
             width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px;
@@ -159,7 +155,6 @@
             <div class="balance-amount" id="balance">0</div>
         </div>
         
-        <!-- Notcoin Style Logo Clicker -->
         <button class="tap-circle" id="tap-btn">
             <img src="logo.jpeg" alt="Cloud Logo" onerror="this.src='https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop'">
         </button>
@@ -222,7 +217,7 @@
         </div>
     </div>
 
-    <!-- ADMIN SECTION -->
+    <!-- ADMIN SECTION (Faqat admin uchun ochiladi) -->
     <div id="admin-section" class="section">
         <h2>Admin Panel</h2>
         <div class="card" style="flex-direction: column; align-items: flex-start;">
@@ -244,20 +239,19 @@
     </div>
 </div>
 
-<!-- DETAILED AUCTION POPUP SCREEN -->
 <div id="auction-detail-view">
     <button class="back-btn" onclick="closeAuctionDetail()">← Orqaga</button>
     <div id="auction-detail-content"></div>
 </div>
 
-<!-- NAVIGATION BAR -->
+<!-- 4-Item Professional Navigation Bar (Admin tugmasi shartli ravishda profil ichiga yoki maxfiy chiqadi) -->
 <div class="nav-bar">
     <button class="nav-item" onclick="switchTab('boost', this)">🚀 Boost</button>
     <button class="nav-item" onclick="switchTab('earn', this)">📋 Vazifalar</button>
-    <button class="nav-item active" onclick="switchTab('home', this)">🪙 Bosish</button>
+    <button class="nav-item active" onclick="switchTab('home', this)">🪙 Asosiy</button>
     <button class="nav-item" onclick="switchTab('auction', this)">🔨 Auksion</button>
-    <button class="nav-item" onclick="switchTab('profile', this)">👤 Profil</button>
-    <button id="nav-admin" class="nav-item hidden" onclick="switchTab('admin', this)">⚙️ Admin</button>
+    <button class="nav-item" onclick="switchTab('profile', this)" id="profile-nav-btn">👤 Profil</button>
+    <button class="nav-item hidden" onclick="switchTab('admin', this)" id="nav-admin">⚙️ Admin</button>
 </div>
 
 <script>
@@ -680,7 +674,7 @@
         let imgUrl = document.getElementById("admin-auction-img-url").value;
         let hours = parseInt(document.getElementById("admin-auction-hours").value) || 24;
         
-        | if (!title || !imgUrl) return alert("Sarlavha va rasm havolasini kiriting!");
+        if (!title || !imgUrl) return alert("Sarlavha va rasm havolasini kiriting!");
 
         let endTime = new Date().getTime() + (hours * 60 * 60 * 1000);
 
