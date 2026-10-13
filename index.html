@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cloud Coin Debug</title>
+    <title>CLOUD Coin App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
@@ -24,8 +24,8 @@
 <div class="tap-btn" onclick="tapCoin()">🪙</div>
 
 <div class="card">
-    <h4>Xatoliklar konsoli:</h4>
-    <div id="console-log">Ishga tushmoqda...</div>
+    <h4>Status konsoli:</h4>
+    <div id="console-log">Yuklanmoqda...</div>
 </div>
 
 <script>
@@ -35,19 +35,20 @@
         logBox.scrollTop = logBox.scrollHeight;
     }
 
-    // Firebase konfiguratsiyasi
+    // Siz taqdim etgan to'g'ri Firebase konfiguratsiyasi
     const firebaseConfig = {
-        apiKey: "AZzaSyAnB4d...", 
-        authDomain: "claudecoin.firebaseapp.com",
-        projectId: "claudecoin",
-        storageBucket: "claudecoin.appspot.com",
-        messagingSenderId: "123456789",
-        appId: "1:123456:web:abcd"
+        apiKey: "AIzaSyD3f-HZK1wclA2fzM1Sg8S1LRluap9qg7k",
+        authDomain: "claude-coin.firebaseapp.com",
+        projectId: "claude-coin",
+        storageBucket: "claude-coin.firebasestorage.app",
+        messagingSenderId: "478948716667",
+        appId: "1:478948716667:web:d6ed5ddd8102e7bd0e72de",
+        measurementId: "G-84V124881S"
     };
 
     try {
         firebase.initializeApp(firebaseConfig);
-        logToScreen("Firebase ulandi ✅");
+        logToScreen("Firebase muvaffaqiyatli ulandi ✅");
     } catch (e) {
         logToScreen("Firebase xatosi: " + e.message);
     }
@@ -63,13 +64,13 @@
     let balance = 0;
     const userRef = db.collection("users").doc(userId);
 
-    // Bazadan o'qish
+    // Bazadan ma'lumotni o'qish
     userRef.get().then((doc) => {
         if (doc.exists) {
             balance = doc.data().balance || 0;
             logToScreen("Bazadan ma'lumot olindi: " + balance);
         } else {
-            logToScreen("Hujjat topilmadi, yangisi yaratilmoqda...");
+            logToScreen("Yangi foydalanuvchi yaratilmoqda...");
             userRef.set({ balance: 0 });
         }
         document.getElementById("balance").innerText = balance;
@@ -77,14 +78,13 @@
         logToScreen("O'qishda xato: " + error.message);
     });
 
-    // Tanga bosish
+    // Tangani bosganda ishlaydigan funksiya
     function tapCoin() {
         balance += 1;
         document.getElementById("balance").innerText = balance;
-        logToScreen("Bosildi, yangi balans: " + balance);
 
         userRef.set({ balance: balance }, { merge: true }).then(() => {
-            logToScreen("Bazaga saqlandi! 💾");
+            logToScreen("Saqlandi: " + balance);
         }).catch((error) => {
             logToScreen("Saqlashda xato: " + error.message);
         });
