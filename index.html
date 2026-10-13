@@ -41,16 +41,20 @@
         .balance-title { font-size: 14px; color: var(--secondary-text); }
         .balance-amount { font-size: 36px; font-weight: bold; color: var(--accent-color); margin-top: 5px; }
 
-        /* Tap section */
+        /* Tap section - Tanga ko'rinishi */
         .tap-circle {
-            width: 200px; height: 200px; border-radius: 50%;
-            background: radial-gradient(circle, #38bdf8 0%, #0369a1 100%);
+            width: 180px; height: 180px; border-radius: 50%;
+            background: radial-gradient(circle, #38bdf8 0%, #0284c7 70%, #0369a1 100%);
             margin: 30px auto; display: flex; align-items: center; justify-content: center;
-            font-size: 32px; font-weight: bold; cursor: pointer;
-            box-shadow: 0 0 30px rgba(56, 189, 248, 0.4);
-            user-select: none; transition: transform 0.1s;
+            font-size: 32px; font-weight: bold; color: #fff; cursor: pointer;
+            box-shadow: 0 10px 25px rgba(56, 189, 248, 0.4), inset 0 2px 5px rgba(255,255,255,0.4);
+            user-select: none; transition: transform 0.08s ease, box-shadow 0.08s ease;
+            border: 4px solid rgba(255, 255, 255, 0.2);
         }
-        .tap-circle:active { transform: scale(0.95); }
+        .tap-circle:active { 
+            transform: scale(0.93); 
+            box-shadow: 0 5px 15px rgba(56, 189, 248, 0.3), inset 0 2px 3px rgba(0,0,0,0.2);
+        }
         .energy-bar-container { background: var(--card-bg); border-radius: 8px; height: 12px; width: 100%; overflow: hidden; margin-top: 10px; }
         .energy-bar { background: var(--accent-color); height: 100%; width: 100%; transition: width 0.3s; }
 
@@ -101,7 +105,7 @@
             <div class="balance-title">Sizning Balansingiz</div>
             <div class="balance-amount" id="balance">0</div>
         </div>
-        <div class="tap-circle" id="tap-btn">TAP</div>
+        <div class="tap-circle" id="tap-btn">🪙</div>
         <div style="display: flex; justify-content: space-between; font-size: 14px; color: var(--secondary-text);">
             <span>Energiya:</span>
             <span id="energy-text">500 / 500</span>
@@ -123,7 +127,7 @@
         <div id="active-auction" class="card" style="flex-direction: column; align-items: flex-start;">
             <p>Hozircha faol auksion yo'q.</p>
         </div>
-        <div class="card" style="flex-direction: column; align-items: flex-start;">
+        <div class="card" id="bid-box" style="flex-direction: column; align-items: flex-start;">
             <h3>Stavka qilish</h3>
             <p>Tikilgan stavkangiz: <span id="my-bid-display" style="color: var(--accent-color); font-weight: bold;">0</span> coin</p>
             <input type="number" id="bid-amount-input" placeholder="Coin miqdorini kiriting">
@@ -163,6 +167,7 @@
             <h3>Yangi Vazifa Qo'shish</h3>
             <input type="text" id="admin-task-title" placeholder="Vazifa nomi (Masalan: Kanalga obuna)">
             <input type="text" id="admin-task-link" placeholder="Kanal / Havola linki">
+            <input type="number" id="admin-task-reward" placeholder="Coin miqdori (Masalan: 500)">
             <button class="btn" onclick="adminAddTask()">Vazifa qo'shish</button>
         </div>
         <div id="admin-tasks-manage" style="width: 100%;"></div>
@@ -190,7 +195,7 @@
 <script>
     // --- FIREBASE CONFIG ---
     const firebaseConfig = {
-        apiKey: "AZzaSyAnB4d...", // O'zingizning firebaseConfig ma'lumotlaringizni shu yerga kiriting
+        apiKey: "AZzaSyAnB4d...", // O'zingizning firebaseConfig ma'lumotlaringizni kiriting
         authDomain: "claudecoin.firebaseapp.com",
         projectId: "claudecoin",
         storageBucket: "claudecoin.appspot.com",
@@ -200,7 +205,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    const ADMIN_ID = 6680296518;
+    const ADMIN_ID = "6680296518";
     let tg = window.Telegram.WebApp;
     tg.expand();
 
@@ -213,8 +218,9 @@
     let myBid = 0;
     let completedTasks = [];
     let referralsCount = 0;
+    let isAuctionActive = false;
 
-    // --- INIT USER DATA ---
+    // --- REFERRAL & INIT USER DATA ---
     const userRef = db.collection("users").doc(userId);
     userRef.get().then((doc) => {
         if (doc.exists) {
@@ -225,6 +231,23 @@
             completedTasks = data.completedTasks || [];
             referralsCount = data.referralsCount || 0;
         } else {
+            let startParam = tg.initDataUnsafe?.start_param;
+            if (startParam && startParam.startsWith("ref_")) {
+                let referrerId = startParam.replace("ref_", "");
+                if (referrerId !== userId) {
+                    let referrerRef = db.collection("users").doc(referrerId);
+                    referrerRef.get().then((refDoc) => {
+                        if (refDoc.exists) {
+                            let refData = refDoc.data();
+                            referrerRef.update({
+                                balance: (refData.balance || 0) + 1000,
+                                referralsCount: (refData.referralsCount || 0) + 1
+                            });
+                        }
+                    });
+                }
+            }
+
             userRef.set({
                 balance: 0,
                 energy: 500,
@@ -242,7 +265,8 @@
             balance: balance,
             energy: energy,
             myBid: myBid,
-            completedTasks: completedTasks
+            completedTasks: completedTasks,
+            referralsCount: referralsCount
         });
     }
 
@@ -255,10 +279,11 @@
         document.getElementById("my-bid-display").innerText = myBid;
         document.getElementById("profile-ref-count").innerText = referralsCount;
         
-        let refLink = `https://t.me/YourBotName?start=ref_${userId}`;
+        let botUsername = tg.initDataUnsafe?.bot_username || "YourTelegramBotName";
+        let refLink = `https://t.me/${botUsername}?start=ref_${userId}`;
         document.getElementById("ref-link-input").value = refLink;
 
-        if (Number(userId) === ADMIN_ID) {
+        if (userId === ADMIN_ID) {
             document.getElementById("nav-admin").classList.remove("hidden");
         }
     }
@@ -298,26 +323,27 @@
                 let task = doc.data();
                 let taskId = doc.id;
                 let isDone = completedTasks.includes(taskId);
+                let reward = task.reward || 500;
 
                 html += `<div class="card">
                     <div>
                         <h4>${task.title}</h4>
-                        <p style="font-size: 12px; color: var(--secondary-text);">+500 Coin</p>
+                        <p style="font-size: 12px; color: var(--secondary-text);">+${reward} Coin</p>
                     </div>
-                    <button class="btn" ${isDone ? "disabled style='background: #64748b;'" : `onclick="completeTask('${taskId}', 500)"`}>
+                    <button class="btn" ${isDone ? "disabled style='background: #64748b;'" : `onclick="completeTask('${taskId}',${reward})"`}>
                         ${isDone ? "Bajarilgan" : "Bajarish"}
                     </button>
                 </div>`;
 
-                if (Number(userId) === ADMIN_ID) {
+                if (userId === ADMIN_ID) {
                     adminHtml += `<div class="card">
-                        <span>${task.title}</span>
+                        <span>${task.title} (+${reward})</span>
                         <button class="btn btn-danger" onclick="adminDeleteTask('${taskId}')">O'chirish</button>
                     </div>`;
                 }
             });
             document.getElementById("tasks-list").innerHTML = html || "<p>Hozircha vazifalar yo'q.</p>";
-            if (Number(userId) === ADMIN_ID) {
+            if (userId === ADMIN_ID) {
                 document.getElementById("admin-tasks-manage").innerHTML = adminHtml;
             }
         });
@@ -330,11 +356,15 @@
         saveData();
         updateUI();
         loadTasks();
-        alert("Tabriklaymiz! 500 ta coin qo'shildi.");
+        alert(`Tabriklaymiz! ${reward} ta coin qo'shildi.`);
     }
 
     // --- AUCTION ---
     function placeBid() {
+        if (!isAuctionActive) {
+            alert("Hozircha faol auksion mavjud emas!");
+            return;
+        }
         let amount = parseInt(document.getElementById("bid-amount-input").value);
         if (isNaN(amount) || amount <= 0) {
             alert("To'g'ri miqdor kiriting!");
@@ -356,10 +386,14 @@
         db.collection("auction").doc("active").get().then((doc) => {
             if (doc.exists) {
                 let data = doc.data();
+                isAuctionActive = true;
                 document.getElementById("active-auction").innerHTML = `
                     <img src="${data.img}" style="width:100%; height:150px; border-radius:8px; object-fit:cover; margin-bottom:10px;">
                     <h3>${data.title}</h3>
                 `;
+            } else {
+                isAuctionActive = false;
+                document.getElementById("active-auction").innerHTML = `<p>Hozircha faol auksion yo'q.</p>`;
             }
         });
     }
@@ -399,12 +433,14 @@
     function adminAddTask() {
         let title = document.getElementById("admin-task-title").value;
         let link = document.getElementById("admin-task-link").value;
-        if (!title) return alert("Sarlavha kiriting!");
+        let reward = parseInt(document.getElementById("admin-task-reward").value);
+        if (!title || isNaN(reward)) return alert("Sarlavha va coin miqdorini to'g'ri kiriting!");
         
-        db.collection("tasks").add({ title, link }).then(() => {
+        db.collection("tasks").add({ title, link, reward }).then(() => {
             alert("Vazifa qo'shildi!");
             document.getElementById("admin-task-title").value = "";
             document.getElementById("admin-task-link").value = "";
+            document.getElementById("admin-task-reward").value = "";
             loadTasks();
         });
     }
