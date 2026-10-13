@@ -2,16 +2,18 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Cloud Coin App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <style>
-        body { background: #0f172a; color: #fff; font-family: sans-serif; text-align: center; padding: 20px; }
+        body { background: #0f172a; color: #fff; font-family: sans-serif; text-align: center; padding: 20px; margin: 0; user-select: none; -webkit-user-select: none; }
         .card { background: #1e293b; padding: 20px; border-radius: 12px; margin-bottom: 15px; }
-        .btn { background: #38bdf8; color: #000; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .tap-btn { width: 150px; height: 150px; border-radius: 50%; background: #0284c7; font-size: 40px; display: flex; align-items: center; justify-content: center; margin: 20px auto; cursor: pointer; border: 4px solid #38bdf8; }
+        .tap-btn { width: 150px; height: 150px; border-radius: 50%; background: #0284c7; font-size: 40px; display: flex; align-items: center; justify-content: center; margin: 20px auto; cursor: pointer; border: 4px solid #38bdf8; transition: transform .08s; touch-action: manipulation; }
+        .tap-btn:active { transform: scale(.94); }
+        .tap-btn.disabled { opacity: .4; pointer-events: none; }
+        #status { font-size: 12px; color: #94a3b8; }
     </style>
 </head>
 <body>
@@ -21,56 +23,89 @@
     <h1 id="balance">0</h1>
 </div>
 
-<div class="tap-btn" onclick="tapCoin()">🪙</div>
+<div class="tap-btn disabled" id="tapBtn">🪙</div>
 
-<p id="status" style="font-size: 12px; color: #94a3b8;">Yuklanmoqda...</p>
+<p id="status">Yuklanmoqda...</p>
 
 <script>
+    // Firebase Console → Project settings → Your apps dan TO'LIQ configni qo'ying
     const firebaseConfig = {
-        apiKey: "AZzaSyAnB4d...", 
+        apiKey: "BU_YERGA_TOLIQ_API_KEY",
         authDomain: "claudecoin.firebaseapp.com",
         projectId: "claudecoin",
         storageBucket: "claudecoin.appspot.com",
-        messagingSenderId: "123456789",
-        appId: "1:123456:web:abcd"
+        messagingSenderId: "BU_YERGA_HAQIQIY_QIYMAT",
+        appId: "BU_YERGA_HAQIQIY_QIYMAT"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    let tg = window.Telegram.WebApp;
-    tg.expand();
+    const statusEl = document.getElementById("status");
+    const balanceEl = document.getElementById("balance");
+    const tapBtn = document.getElementById("tapBtn");
 
-    // Doimiy barqaror ID (Agar Telegram user bermasa, test ID ishlatiladi)
-    let user = tg.initDataUnsafe?.user;
-    let userId = user ? user.id.toString() : "6680296518"; 
-    let balance = 0;
+    // Telegram mavjudligini tekshirish
+    const tg = window.Telegram && window.Telegram.WebApp;
+    if (tg) { tg.ready(); tg.expand(); }
 
+    const tgUser = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
+    const userId = tgUser ? String(tgUser.id) : "test_user"; // brauzerda test uchun
     const userRef = db.collection("users").doc(userId);
 
-    // Bazadan ma'lumotni o'qib olish
+    let balance = 0;   // ekrandagi balans
+    let pending = 0;   // hali bazaga yozilmagan bosishlar
+    let loaded = false;
+
+    function setStatus(t) { statusEl.innerText = t; }
+
+    // Bazadan o'qish
     userRef.get().then((doc) => {
         if (doc.exists) {
-            balance = doc.data().balance || 0;
+            balance = Number(doc.data().balance) || 0;
         } else {
-            userRef.set({ balance: 0 });
+            return userRef.set({ balance: 0 });
         }
-        document.getElementById("balance").innerText = balance;
-        document.getElementById("status").innerText = "Ma'lumot bazadan yuklandi ✅";
-    }).catch((error) => {
-        document.getElementById("status").innerText = "Xatolik: " + error.message;
+    }).then(() => {
+        loaded = true;
+        balanceEl.innerText = balance;
+        tapBtn.classList.remove("disabled");
+        setStatus("Ma'lumot bazadan yuklandi ✅");
+    }).catch((e) => {
+        setStatus("Xatolik: " + e.message);
     });
 
-    // Tanga bosilganda darhol bazaga yozish
-    function tapCoin() {
+    // Bosish: faqat lokal yig'iladi
+    tapBtn.addEventListener("click", () => {
+        if (!loaded) return;
         balance += 1;
-        document.getElementById("balance").innerText = balance;
-        
-        userRef.set({ balance: balance }, { merge: true }).then(() => {
-            document.getElementById("status").innerText = "Saqlandi 💾";
-        }).catch((error) => {
-            document.getElementById("status").innerText = "Saqlashda xato: " + error.message;
-        });
+        pending += 1;
+        balanceEl.innerText = balance;
+        if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
+    });
+
+    // Yig'ilganini bir martada yozish (increment — race condition yo'q)
+    let saving = false;
+    function flush() {
+        if (!loaded || saving || pending === 0) return;
+        const n = pending;
+        pending = 0;
+        saving = true;
+        userRef.set(
+            { balance: firebase.firestore.FieldValue.increment(n) },
+            { merge: true }
+        ).then(() => {
+            setStatus("Saqlandi 💾");
+        }).catch((e) => {
+            pending += n; // xato bo'lsa qaytarib qo'yamiz, keyingi safar urinadi
+            setStatus("Saqlashda xato: " + e.message);
+        }).finally(() => { saving = false; });
     }
+
+    setInterval(flush, 3000);
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden) flush();
+    });
+    window.addEventListener("pagehide", flush);
 </script>
 
 </body>
