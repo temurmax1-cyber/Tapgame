@@ -10,8 +10,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
+            --bg-color: rgba(15, 23, 42, 0.85);
+            --card-bg: rgba(30, 41, 59, 0.9);
             --accent-color: #38bdf8;
             --text-color: #f8fafc;
             --secondary-text: #94a3b8;
@@ -20,7 +20,10 @@
         }
         body {
             margin: 0; padding: 0;
-            background-color: var(--bg-color);
+            background: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.85)), url('https://images.unsplash.com/photo-1534088568595-a066f410bcda?q=80&w=1000&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
             color: var(--text-color);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex; flex-direction: column; align-items: center;
@@ -33,6 +36,7 @@
         .balance-card {
             background: var(--card-bg); border-radius: 16px; padding: 20px;
             margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            backdrop-filter: blur(5px);
         }
         .balance-title { font-size: 14px; color: var(--secondary-text); }
         .balance-amount { font-size: 36px; font-weight: bold; color: var(--accent-color); margin-top: 5px; }
@@ -59,6 +63,7 @@
             background: var(--card-bg); border-radius: 12px; padding: 15px;
             margin-bottom: 12px; text-align: left; display: flex;
             justify-content: space-between; align-items: center;
+            backdrop-filter: blur(5px);
         }
         .card img { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; margin-right: 10px; }
         .btn {
@@ -70,8 +75,9 @@
         /* Navigation */
         .nav-bar {
             position: fixed; bottom: 0; left: 0; width: 100%;
-            background: var(--card-bg); display: flex; justify-content: space-around;
+            background: rgba(30, 41, 59, 0.95); display: flex; justify-content: space-around;
             padding: 10px 0; border-top: 1px solid #334155; box-sizing: border-box; z-index: 1000;
+            backdrop-filter: blur(10px);
         }
         .nav-item {
             background: none; border: none; color: var(--secondary-text);
@@ -82,7 +88,7 @@
         /* Inputs & Forms */
         input, textarea {
             width: 100%; padding: 10px; margin: 8px 0; border-radius: 8px;
-            border: 1px solid #334155; background: var(--bg-color); color: var(--text-color); box-sizing: border-box;
+            border: 1px solid #334155; background: rgba(15, 23, 42, 0.9); color: var(--text-color); box-sizing: border-box;
         }
     </style>
 </head>
@@ -360,18 +366,25 @@
 
     // --- BOOST / ADS ---
     function watchAd() {
-        // Haqiqiy reklama SDK integratsiyasi shu yerga qo'shiladi. 
-        // Hozircha reklama ko'rilmagani uchun coin berishni blokladik:
-        let watched = confirm("Reklama ko'rishni boshlaysizmi?");
-        if (watched) {
-            // Agar foydalanuvchi reklamani oxirigacha ko'rsa:
-            balance += 100;
-            saveData();
-            updateUI();
-            alert("Reklama ko'rildi! +100 coin qo'shildi.");
-        } else {
-            alert("Reklama ko'rilmadi, coin berilmadi!");
-        }
+        let btn = event.target;
+        btn.disabled = true;
+        let count = 5;
+        btn.innerText = `Reklama: ${count}s`;
+
+        let timer = setInterval(() => {
+            count--;
+            if (count > 0) {
+                btn.innerText = `Reklama: ${count}s`;
+            } else {
+                clearInterval(timer);
+                balance += 100;
+                saveData();
+                updateUI();
+                btn.disabled = false;
+                btn.innerText = "Ko'rish";
+                alert("Tabriklaymiz! Reklama ko'rildi va +100 coin qo'shildi.");
+            }
+        }, 1000);
     }
 
     // --- PROFILE / REF ---
