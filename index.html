@@ -3,9 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CLOUD Coin Game</title>
+    <title>CLOUD Coin WebApp</title>
+    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <style>
@@ -13,10 +16,7 @@
         
         body {
             font-family: 'Outfit', sans-serif;
-            background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5)), url('https://images.unsplash.com/photo-1534088568595-a066f410bcda?q=80&w=1000&auto=format&fit=crop');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #064e3b 100%);
             color: #ffffff;
             overflow: hidden;
             user-select: none;
@@ -24,17 +24,17 @@
         }
 
         .glass {
-            background: rgba(15, 23, 42, 0.65);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .glass-card {
-            background: rgba(15, 23, 42, 0.75);
+            background: rgba(15, 23, 42, 0.6);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .coin-btn {
@@ -61,7 +61,6 @@
         ::-webkit-scrollbar {
             display: none;
         }
-        .hidden { display: none !important; }
     </style>
 </head>
 <body class="h-screen flex flex-col justify-between select-none">
@@ -86,32 +85,35 @@
     </header>
 
     <!-- Main Content Area (Tabs) -->
-    <main id="main-content" class="flex-1 overflow-y-auto px-5 pb-28 pt-2 relative flex flex-col items-center justify-center">
+    <main id="main-content" class="flex-1 overflow-y-auto px-5 pb-28 pt-2 relative flex flex-col items-center">
         
         <!-- CLICKER TAB -->
-        <div id="tab-home" class="tab-pane section active flex flex-col items-center justify-center w-full h-full">
+        <div id="tab-clicker" class="tab-pane flex flex-col items-center justify-center w-full h-full">
+            <div class="glass-card px-4 py-2 rounded-xl mb-4 flex items-center gap-2 border border-emerald-500/20">
+                <span class="text-xs text-gray-400">Soatlik daromad:</span>
+                <span class="text-xs font-bold text-emerald-400" id="profit-per-hour">+0 CLOUD/soat</span>
+            </div>
+
             <div class="text-center mb-4">
                 <div class="text-5xl font-extrabold tracking-tight text-white flex items-center justify-center gap-2">
-                    <img src="logo1.jpg" class="w-10 h-10 rounded-full object-cover border border-emerald-500/30" alt="Icon" onerror="this.src='https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop'">
+                    <img src="logo1.jpg" class="w-10 h-10 rounded-full object-cover border border-emerald-500/30" alt="Icon">
                     <span id="clicker-balance">0</span>
                 </div>
             </div>
 
-            <!-- Circular Tap Coin Area with logo1.jpg -->
             <div class="relative flex items-center justify-center my-2" id="click-container" style="width: 260px; height: 260px;">
                 <div class="absolute w-full h-full rounded-full bg-emerald-500/10 blur-xl animate-pulse"></div>
-                <button id="tap-btn" class="coin-btn relative w-64 h-64 rounded-full p-2 glass flex items-center justify-center shadow-2xl border-2 border-emerald-500/30 focus:outline-none cursor-pointer">
+                <button id="tap-btn" class="coin-btn relative w-64 h-64 rounded-full p-2 glass flex items-center justify-center shadow-2xl border-2 border-emerald-500/30 focus:outline-none">
                     <div class="w-full h-full rounded-full overflow-hidden shadow-inner flex items-center justify-center bg-slate-900">
-                        <img src="logo1.jpg" alt="CLOUD Coin" class="w-full h-full object-cover pointer-events-none" onerror="this.src='https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop'">
+                        <img src="logo1.jpg" alt="CLOUD Coin" class="w-full h-full object-cover pointer-events-none">
                     </div>
                 </button>
             </div>
 
-            <!-- Energy Bar -->
             <div class="w-full max-w-xs mt-6">
                 <div class="flex justify-between text-xs text-gray-300 mb-2 font-medium">
                     <span class="flex items-center gap-1">⚡ Energiya</span>
-                    <span><span id="energy">500</span> / <span id="max-energy">500</span></span>
+                    <span><span id="energy">1000</span> / <span id="max-energy">1000</span></span>
                 </div>
                 <div class="w-full bg-slate-800/80 rounded-full h-3 p-0.5 border border-white/5">
                     <div id="energy-bar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-200" style="width: 100%;"></div>
@@ -120,107 +122,130 @@
         </div>
 
         <!-- EARN / TASKS TAB -->
-        <div id="tab-earn" class="tab-pane section hidden w-full h-full flex flex-col">
-            <h2 class="text-2xl font-bold mb-4 text-center">Vazifalar</h2>
-            <div id="tasks-list" class="space-y-3 overflow-y-auto flex-1 pr-1">Yuklanmoqda...</div>
-        </div>
-
-        <!-- AUCTION TAB -->
-        <div id="tab-auction" class="tab-pane section hidden w-full h-full flex flex-col">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-bold">Auksion</h2>
-                <span class="text-xs text-gray-400">Sovg'ani tanlang</span>
+        <div id="tab-earn" class="tab-pane hidden w-full h-full flex flex-col">
+            <h1 class="text-2xl font-bold mb-4 text-center">Vazifalar</h1>
+            <div id="tasks-list" class="space-y-3 overflow-y-auto flex-1 pr-1">
+                <p class="text-center text-gray-400 text-sm">Yuklanmoqda...</p>
             </div>
-            <div id="auction-list" class="space-y-3 overflow-y-auto flex-1 pr-1">Yuklanmoqda...</div>
         </div>
 
         <!-- BOOST TAB -->
-        <div id="tab-boost" class="tab-pane section hidden w-full h-full flex flex-col">
-            <h2 class="text-2xl font-bold mb-4 text-center">Boost & Reklama</h2>
-            <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
-                <div>
-                    <h4 class="font-semibold text-sm">Reklama ko'rish</h4>
-                    <p class="text-xs text-gray-400">Reklama ko'rib +100 coin oling</p>
+        <div id="tab-boost" class="tab-pane hidden w-full h-full flex flex-col">
+            <h1 class="text-2xl font-bold mb-4 text-center">Bustlar va Kartalar</h1>
+            <div class="space-y-3 overflow-y-auto flex-1 pr-1">
+                <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
+                    <div>
+                        <h3 class="font-semibold text-sm">Turbo Tap (+1 kuch)</h3>
+                        <p class="text-xs text-gray-400">Narxi: 1,000 CLOUD</p>
+                    </div>
+                    <button onclick="buyUpgrade('tap')" class="bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-bold px-4 py-2 rounded-xl text-xs active:scale-95 transition">Sotib olish</button>
                 </div>
-                <button class="bg-emerald-500 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs active:scale-95 transition cursor-pointer" onclick="watchAd()">Ko'rish</button>
-            </div>
-        </div>
-
-        <!-- PROFILE TAB -->
-        <div id="tab-profile" class="tab-pane section hidden w-full h-full flex flex-col items-center justify-center text-center">
-            <h2 class="text-2xl font-bold mb-4">Profil</h2>
-            <div class="glass-card p-5 rounded-2xl w-full text-left space-y-2">
-                <p class="text-sm">👤 Foydalanuvchi: <span id="profile-name" class="text-emerald-400 font-semibold">--</span></p>
-                <p class="text-sm">💰 Jami tangalar: <span id="profile-balance" class="text-amber-400 font-semibold">0</span></p>
-                <p class="text-sm">👥 Chaqirgan do'stlar: <span id="profile-ref-count">0</span> ta</p>
-                <p class="text-sm">🔗 Sizni taklif qilgan: <span id="invited-by" class="text-amber-400">Hech kim</span></p>
-                
-                <p class="text-xs text-gray-400 mt-3">Sizning referal havolangiz (+500 coin):</p>
-                <input type="text" id="ref-link-input" readonly class="w-full p-2 bg-slate-900 border border-white/10 rounded-xl text-xs text-white">
-                <button class="w-full py-2.5 bg-emerald-500 text-slate-950 font-bold rounded-xl text-xs mt-2 active:scale-95 transition cursor-pointer" onclick="copyRefLink()">Havolani nusxalash</button>
-                
-                <h3 class="text-sm font-bold mt-4">Siz taklif qilgan do'stlar:</h3>
-                <div id="referrals-list" class="w-full max-h-28 overflow-y-auto text-xs text-gray-300 bg-slate-900/60 p-3 rounded-xl">
-                    Hozircha do'stlar yo'q.
+                <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
+                    <div>
+                        <h3 class="font-semibold text-sm">Energiya sig'imini oshirish</h3>
+                        <p class="text-xs text-gray-400">Narxi: 2,000 CLOUD</p>
+                    </div>
+                    <button onclick="buyUpgrade('energy')" class="bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-bold px-4 py-2 rounded-xl text-xs active:scale-95 transition">Sotib olish</button>
+                </div>
+                <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
+                    <div>
+                        <h3 class="font-semibold text-sm">Reklama ko'rish</h3>
+                        <p class="text-xs text-gray-400">Reklama ko'rib +100 CLOUD oling</p>
+                    </div>
+                    <button onclick="watchAd()" class="bg-emerald-500 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs active:scale-95 transition">Ko'rish</button>
                 </div>
             </div>
         </div>
 
-        <!-- ADMIN TAB -->
-        <div id="tab-admin" class="tab-pane section hidden w-full h-full flex flex-col overflow-y-auto pr-1">
-            <h2 class="text-2xl font-bold mb-4 text-center">Admin Panel</h2>
-            <div class="glass-card p-4 rounded-2xl mb-4 space-y-2">
-                <h3 class="font-semibold text-sm">Yangi Vazifa Qo'shish</h3>
-                <input type="text" id="admin-task-title" placeholder="Vazifa nomi" class="w-full p-2.5 bg-slate-900 border border-white/10 rounded-xl text-xs text-white">
-                <input type="text" id="admin-task-link" placeholder="Kanal havolasi (https://t.me/...)" class="w-full p-2.5 bg-slate-900 border border-white/10 rounded-xl text-xs text-white">
-                <button class="w-full py-2.5 bg-emerald-500 text-slate-950 font-bold rounded-xl text-xs cursor-pointer" onclick="adminAddTask()">Vazifa qo'shish (+500 coin)</button>
+        <!-- AUCTION TAB -->
+        <div id="tab-auction" class="tab-pane hidden w-full h-full flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <h1 class="text-2xl font-bold">Auksion</h1>
+                <span class="text-xs text-gray-400">Sovg'ani tanlang</span>
             </div>
-            <div id="admin-tasks-manage" class="space-y-2 mb-4"></div>
+            <div id="auction-list" class="space-y-3 overflow-y-auto flex-1 pr-1">
+                <p class="text-center text-gray-400 text-sm">Yuklanmoqda...</p>
+            </div>
+        </div>
 
-            <div class="glass-card p-4 rounded-2xl space-y-2">
-                <h3 class="font-semibold text-sm">Auksionga Sovg'a Qo'shish</h3>
-                <input type="text" id="admin-auction-title" placeholder="Sovg'a nomi" class="w-full p-2.5 bg-slate-900 border border-white/10 rounded-xl text-xs text-white">
-                <input type="text" id="admin-auction-img-url" placeholder="Rasm havolasi (URL)" class="w-full p-2.5 bg-slate-900 border border-white/10 rounded-xl text-xs text-white">
-                <input type="number" id="admin-auction-hours" placeholder="Tugash vaqti (soat)" class="w-full p-2.5 bg-slate-900 border border-white/10 rounded-xl text-xs text-white">
-                <button class="w-full py-2.5 bg-emerald-500 text-slate-950 font-bold rounded-xl text-xs cursor-pointer" onclick="adminCreateAuction()">Auksionni boshlash</button>
+        <!-- FRIENDS / PROFILE TAB -->
+        <div id="tab-friends" class="tab-pane hidden w-full h-full flex flex-col">
+            <h1 class="text-2xl font-bold mb-2 text-center">Do'stlar va Profil</h1>
+            <p class="text-xs text-emerald-400 mb-4 text-center font-semibold">Har bir taklif qilingan do'st uchun +500 CLOUD beriladi!</p>
+            
+            <div class="glass-card p-4 rounded-2xl space-y-3 mb-4">
+                <p class="text-sm">👤 Foydalanuvchi: <span id="profile-name" class="text-emerald-400 font-bold">--</span></p>
+                <p class="text-sm">💰 Jami aktiv: <span id="profile-balance" class="text-emerald-400 font-bold">0</span> CLOUD</p>
+                <p class="text-sm">👥 Chaqirgan do'stlar: <span id="profile-ref-count" class="font-bold">0</span> ta</p>
+                <p class="text-sm">🔗 Taklif havolasi:</p>
+                <input type="text" id="ref-link-input" readonly class="w-full p-2 rounded-xl bg-slate-900 border border-white/10 text-xs text-gray-300">
+                <button onclick="copyRefLink()" class="w-full py-2 bg-emerald-500 text-slate-950 font-bold rounded-xl text-xs active:scale-95 transition">Havolani nusxalash</button>
             </div>
-            <div id="admin-auctions-manage" class="space-y-2 mt-4"></div>
+
+            <h3 class="text-sm font-semibold mb-2">Siz taklif qilgan do'stlar:</h3>
+            <div id="referrals-list" class="glass-card p-3 rounded-2xl overflow-y-auto max-h-32 text-xs text-gray-300 space-y-1">
+                Hozircha do'stlar yo'q.
+            </div>
+        </div>
+
+        <!-- ADMIN TAB (Only for ADMIN_ID) -->
+        <div id="tab-admin" class="tab-pane hidden w-full h-full flex flex-col">
+            <h1 class="text-2xl font-bold mb-4 text-center text-emerald-400">Admin Panel</h1>
+            
+            <div class="space-y-4 overflow-y-auto flex-1 pr-1">
+                <div class="glass-card p-4 rounded-2xl space-y-2">
+                    <h3 class="font-semibold text-sm">Yangi Vazifa Qo'shish</h3>
+                    <input type="text" id="admin-task-title" placeholder="Vazifa nomi (Masalan: Kanalga obuna)" class="w-full p-2 rounded-xl bg-slate-900 border border-white/10 text-xs">
+                    <input type="text" id="admin-task-link" placeholder="Kanal havolasi (https://t.me/...)" class="w-full p-2 rounded-xl bg-slate-900 border border-white/10 text-xs">
+                    <button onclick="adminAddTask()" class="w-full py-2 bg-emerald-500 text-slate-950 font-bold rounded-xl text-xs">Vazifa qo'shish (+500)</button>
+                </div>
+                <div id="admin-tasks-manage" class="space-y-2"></div>
+
+                <div class="glass-card p-4 rounded-2xl space-y-2 mt-4">
+                    <h3 class="font-semibold text-sm">Auksionga Sovg'a Qo'shish</h3>
+                    <input type="text" id="admin-auction-title" placeholder="Sovg'a nomi (Masalan: Telegram Premium)" class="w-full p-2 rounded-xl bg-slate-900 border border-white/10 text-xs">
+                    <input type="text" id="admin-auction-img-url" placeholder="Rasm URL havolasi" class="w-full p-2 rounded-xl bg-slate-900 border border-white/10 text-xs">
+                    <input type="number" id="admin-auction-hours" placeholder="Tugash vaqti (soatda)" class="w-full p-2 rounded-xl bg-slate-900 border border-white/10 text-xs">
+                    <button onclick="adminCreateAuction()" class="w-full py-2 bg-emerald-500 text-slate-950 font-bold rounded-xl text-xs">Auksionni boshlash</button>
+                </div>
+                <div id="admin-auctions-manage" class="space-y-2"></div>
+            </div>
         </div>
 
     </main>
 
-    <!-- Auction Detail Modal -->
-    <div id="auction-detail-view" class="hidden fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-50 p-5 overflow-y-auto text-left">
-        <button class="text-white font-semibold text-sm mb-4 flex items-center gap-1 cursor-pointer" onclick="closeAuctionDetail()">← Orqaga</button>
+    <!-- AUCTION DETAIL MODAL -->
+    <div id="auction-detail-view" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-xl p-5 overflow-y-auto">
+        <button onclick="closeAuctionDetail()" class="text-emerald-400 font-bold text-sm mb-4 flex items-center gap-1">← Orqaga</button>
         <div id="auction-detail-content"></div>
     </div>
 
     <!-- Bottom Navigation Bar -->
-    <nav class="fixed bottom-0 left-0 right-0 p-3 z-40">
+    <nav class="fixed bottom-0 left-0 right-0 p-3 z-20">
         <div class="glass rounded-2xl p-2 flex justify-around items-center shadow-2xl max-w-md mx-auto">
-            <button onclick="switchTab('boost', this)" class="nav-item flex flex-col items-center text-gray-400 hover:text-emerald-400 transition cursor-pointer flex-1 py-1 rounded-xl" data-target="boost">
-                <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 2l-5.5 9h11z"/><path d="M6.5 13h11l-5.5 9z" opacity=".7"/></svg>
-                <span class="text-[10px] mt-1 font-semibold">BOOST</span>
+            <button onclick="switchTab('clicker', this)" class="nav-btn flex flex-col items-center text-emerald-400 transition" data-target="clicker">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg>
+                <span class="text-[9px] mt-1 font-semibold">O'yin</span>
             </button>
-            <button onclick="switchTab('earn', this)" class="nav-item flex flex-col items-center text-gray-400 hover:text-emerald-400 transition cursor-pointer flex-1 py-1 rounded-xl" data-target="earn">
-                <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-                <span class="text-[10px] mt-1 font-semibold">VAZIFA</span>
+            <button onclick="switchTab('earn', this)" class="nav-btn flex flex-col items-center text-gray-400 hover:text-emerald-400 transition" data-target="earn">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span class="text-[9px] mt-1 font-semibold">Vazifa</span>
             </button>
-            <button onclick="switchTab('home', this)" class="nav-item flex flex-col items-center text-emerald-400 transition cursor-pointer flex-1 py-1 rounded-xl bg-white/10" data-target="home">
-                <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M10 8l6 4-6 4V8z" fill="#064e3b"/></svg>
-                <span class="text-[10px] mt-1 font-semibold">BOSISH</span>
+            <button onclick="switchTab('boost', this)" class="nav-btn flex flex-col items-center text-gray-400 hover:text-emerald-400 transition" data-target="boost">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <span class="text-[9px] mt-1 font-semibold">Bust</span>
             </button>
-            <button onclick="switchTab('auction', this)" class="nav-item flex flex-col items-center text-gray-400 hover:text-emerald-400 transition cursor-pointer flex-1 py-1 rounded-xl" data-target="auction">
-                <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
-                <span class="text-[10px] mt-1 font-semibold">AUKSION</span>
+            <button onclick="switchTab('auction', this)" class="nav-btn flex flex-col items-center text-gray-400 hover:text-emerald-400 transition" data-target="auction">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 18v1c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+                <span class="text-[9px] mt-1 font-semibold">Auksion</span>
             </button>
-            <button onclick="switchTab('profile', this)" class="nav-item flex flex-col items-center text-gray-400 hover:text-emerald-400 transition cursor-pointer flex-1 py-1 rounded-xl" data-target="profile">
-                <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-                <span class="text-[10px] mt-1 font-semibold">PROFIL</span>
+            <button onclick="switchTab('friends', this)" class="nav-btn flex flex-col items-center text-gray-400 hover:text-emerald-400 transition" data-target="friends">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                <span class="text-[9px] mt-1 font-semibold">Profil</span>
             </button>
-            <button onclick="switchTab('admin', this)" class="nav-item hidden flex flex-col items-center text-gray-400 hover:text-emerald-400 transition cursor-pointer flex-1 py-1 rounded-xl" id="nav-admin" data-target="admin">
-                <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-                <span class="text-[10px] mt-1 font-semibold">ADMIN</span>
+            <button onclick="switchTab('admin', this)" class="nav-btn hidden flex flex-col items-center text-gray-400 hover:text-emerald-400 transition" id="nav-admin" data-target="admin">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.04.64.09.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"></path></svg>
+                <span class="text-[9px] mt-1 font-semibold">Admin</span>
             </button>
         </div>
     </nav>
@@ -242,7 +267,7 @@
         const db = firebase.firestore();
 
         const ADMIN_ID = "6680296518";
-        let tg = window.Telegram.WebApp;
+        const tg = window.Telegram.WebApp;
         tg.expand();
 
         let user = tg.initDataUnsafe?.user;
@@ -253,8 +278,9 @@
         let referrerId = startParam && startParam.startsWith("ref_") ? startParam.replace("ref_", "") : null;
 
         let balance = 0;
-        let energy = 500;
-        let maxEnergy = 500;
+        let energy = 1000;
+        let maxEnergy = 1000;
+        let tapPower = 1;
         let lastEnergyTime = new Date().getTime();
         let completedTasks = [];
         let referrals = [];
@@ -266,7 +292,9 @@
             if (doc.exists) {
                 let data = doc.data();
                 balance = data.balance || 0;
-                energy = data.energy !== undefined ? data.energy : 500;
+                energy = data.energy !== undefined ? data.energy : 1000;
+                maxEnergy = data.maxEnergy || 1000;
+                tapPower = data.tapPower || 1;
                 lastEnergyTime = data.lastEnergyTime || now;
                 completedTasks = data.completedTasks || [];
                 referrals = data.referrals || [];
@@ -285,7 +313,9 @@
             } else {
                 let newUserData = {
                     balance: 0,
-                    energy: 500,
+                    energy: 1000,
+                    maxEnergy: 1000,
+                    tapPower: 1,
                     lastEnergyTime: now,
                     completedTasks: [],
                     referrals: [],
@@ -326,6 +356,8 @@
             userRef.set({
                 balance: balance,
                 energy: energy,
+                maxEnergy: maxEnergy,
+                tapPower: tapPower,
                 lastEnergyTime: lastEnergyTime,
                 completedTasks: completedTasks,
                 referrals: referrals,
@@ -339,18 +371,17 @@
             document.getElementById("clicker-balance").innerText = balance.toLocaleString();
             document.getElementById("profile-balance").innerText = balance.toLocaleString();
             document.getElementById("profile-name").innerText = userName;
+            document.getElementById("user-initial").innerText = userName.charAt(0).toUpperCase();
             document.getElementById("energy").innerText = Math.floor(energy);
             document.getElementById("max-energy").innerText = maxEnergy;
             document.getElementById("energy-bar").style.width = (energy / maxEnergy) * 100 + "%";
             document.getElementById("profile-ref-count").innerText = referrals.length;
-            document.getElementById("invited-by").innerText = invitedByName;
-            
-            let refsHtml = referrals.length > 0 ? referrals.map(r => `<div>👤 ${r.name} (+500 🪙)</div>`).join('') : "Hozircha do'stlar yo'q.";
+
+            let refsHtml = referrals.length > 0 ? referrals.map(r => `<div>👤 ${r.name} (+500 CLOUD)</div>`).join('') : "Hozircha do'stlar yo'q.";
             document.getElementById("referrals-list").innerHTML = refsHtml;
 
             let botUsername = "Cloudcointapbot";
-            let refLink = `https://t.me/${botUsername}?start=ref_${userId}`;
-            document.getElementById("ref-link-input").value = refLink;
+            document.getElementById("ref-link-input").value = `https://t.me/${botUsername}?start=ref_${userId}`;
 
             if (userId === ADMIN_ID) {
                 document.getElementById("nav-admin").classList.remove("hidden");
@@ -361,23 +392,26 @@
 
         function switchTab(tabName, el) {
             document.querySelectorAll('.tab-pane').forEach(s => s.classList.add('hidden'));
-            document.getElementById('tab-' + tabName).classList.remove('hidden');
-
-            document.querySelectorAll('.nav-item').forEach(btn => {
-                btn.classList.remove('bg-white/10', 'text-emerald-400');
-                btn.classList.add('text-gray-400');
+            document.querySelectorAll('.nav-btn').forEach(i => {
+                i.classList.remove('text-emerald-400');
+                i.classList.add('text-gray-400');
             });
-            el.classList.add('bg-white/10', 'text-emerald-400');
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
             el.classList.remove('text-gray-400');
+            el.classList.add('text-emerald-400');
         }
 
         const tapBtn = document.getElementById("tap-btn");
         tapBtn.addEventListener("pointerdown", (e) => {
-            if (energy > 0) {
-                balance += 1;
-                energy -= 1;
+            if (energy >= tapPower) {
+                balance += tapPower;
+                energy -= tapPower;
                 saveData();
                 updateUI();
+
+                if (window.Telegram && tg.HapticFeedback) {
+                    tg.HapticFeedback.impactOccurred('light');
+                }
 
                 const rect = tapBtn.getBoundingClientRect();
                 const x = e.clientX - rect.left;
@@ -385,209 +419,40 @@
 
                 const floatEl = document.createElement('div');
                 floatEl.className = 'floating-number';
-                floatEl.innerText = '+1';
+                floatEl.innerText = '+' + tapPower;
                 floatEl.style.left = x + 'px';
                 floatEl.style.top = y + 'px';
                 tapBtn.appendChild(floatEl);
 
                 setTimeout(() => floatEl.remove(), 800);
-
-                if (window.Telegram && tg.HapticFeedback) {
-                    tg.HapticFeedback.impactOccurred('light');
-                }
             }
         });
 
         setInterval(() => {
-            let now = new Date().getTime();
-            let dayMs = 24 * 60 * 60 * 1000;
-            let elapsed = now - lastEnergyTime;
-            
-            if (energy < maxEnergy && elapsed > 0) {
-                let restored = (elapsed / dayMs) * maxEnergy;
-                energy = Math.min(maxEnergy, energy + restored);
-                lastEnergyTime = now;
+            if (energy < maxEnergy) {
+                energy = Math.min(maxEnergy, energy + 2);
                 saveData();
                 updateUI();
             }
-        }, 10000);
+        }, 1000);
 
-        function loadTasks() {
-            db.collection("tasks").get().then((querySnapshot) => {
-                let html = "";
-                let adminHtml = "";
-                querySnapshot.forEach((doc) => {
-                    let task = doc.data();
-                    let taskId = doc.id;
-                    let isDone = completedTasks.includes(taskId);
-                    let reward = task.reward || 500;
-                    let taskLink = task.link || "https://t.me/";
-
-                    html += `<div class="glass-card p-4 rounded-2xl flex items-center justify-between">
-                        <div>
-                            <h4 class="font-semibold text-sm">${task.title}</h4>
-                            <p class="text-xs text-emerald-400">+${reward} Coin</p>
-                        </div>
-                        <div>
-                            ${isDone ? 
-                                `<button class="px-4 py-2 bg-white/10 text-white rounded-xl text-xs font-bold" disabled>Bajarilgan</button>` : 
-                                `<div class="flex gap-2">
-                                    <a href="${taskLink}" target="_blank" class="px-3 py-2 bg-white/10 text-white rounded-xl text-xs font-bold text-center no-underline" onclick="markVisited('${taskId}')">Obuna</a>
-                                    <button class="px-3 py-2 bg-emerald-500 text-slate-950 rounded-xl text-xs font-bold cursor-pointer" onclick="verifyTask('${taskId}',${reward})">Tekshirish</button>
-                                 </div>`
-                            }
-                        </div>
-                    </div>`;
-
-                    adminHtml += `<div class="glass-card p-3 rounded-xl flex items-center justify-between">
-                        <span class="text-xs">${task.title} (+${reward})</span>
-                        <button class="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-bold cursor-pointer" onclick="adminDeleteTask('${taskId}')">O'chirish</button>
-                    </div>`;
-                });
-                document.getElementById("tasks-list").innerHTML = html || "<p class='text-xs text-gray-400 text-center'>Vazifalar yo'q</p>";
-                document.getElementById("admin-tasks-manage").innerHTML = adminHtml;
-            });
-        }
-
-        let visitedTasks = [];
-        function markVisited(taskId) {
-            if (!visitedTasks.includes(taskId)) visitedTasks.push(taskId);
-        }
-
-        function verifyTask(taskId, reward) {
-            if (!visitedTasks.includes(taskId)) {
-                alert("Iltimos, avval kanalga o'tib obuna bo'ling!");
-                return;
-            }
-
-            let btn = event.target;
-            btn.innerText = "Tekshirilmoqda...";
-            btn.disabled = true;
-
-            setTimeout(() => {
-                if (completedTasks.includes(taskId)) return;
-                completedTasks.push(taskId);
-                balance += reward;
+        function buyUpgrade(type) {
+            if (type === 'tap' && balance >= 1000) {
+                balance -= 1000;
+                tapPower += 1;
                 saveData();
                 updateUI();
-                loadTasks();
-                alert(`Tabriklaymiz! Vazifa bajarildi va +${reward} coin qo'shildi.`);
-            }, 1200);
-        }
-
-        function loadAuctions() {
-            db.collection("auctions").get().then((querySnapshot) => {
-                let html = "";
-                let adminHtml = "";
-                let now = new Date().getTime();
-
-                querySnapshot.forEach((doc) => {
-                    let item = doc.data();
-                    let auctionId = doc.id;
-                    let endTime = item.endTime || (now + 3600000);
-                    let timeLeft = endTime - now;
-                    let hours = Math.max(0, Math.floor(timeLeft / (1000 * 60 * 60)));
-                    let minutes = Math.max(0, Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60)));
-                    let seconds = Math.max(0, Math.floor((timeLeft % (1000 * 60)) / 1000));
-                    let imgSrc = item.img || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop";
-
-                    html += `<div class="glass-card rounded-2xl overflow-hidden cursor-pointer" onclick="openAuctionDetail('${auctionId}')">
-                        <div class="relative w-full h-36 bg-slate-900">
-                            <div class="absolute top-3 left-3 bg-black/70 px-3 py-1 rounded-full text-xs border border-white/20">❤️ ${item.likes || 45}</div>
-                            <img src="${imgSrc}" class="w-full h-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop'">
-                        </div>
-                        <div class="p-3 flex justify-between items-center">
-                            <div>
-                                <div class="font-bold text-sm">${item.title}</div>
-                                <div class="text-amber-400 font-bold text-xs">💎 ${item.topBid || 0} 🪙</div>
-                            </div>
-                            <div class="text-xs text-emerald-400 font-bold">⏳ ${hours}s ${minutes}d ${seconds}s</div>
-                        </div>
-                    </div>`;
-
-                    adminHtml += `<div class="glass-card p-3 rounded-xl flex items-center justify-between">
-                        <div>
-                            <div class="text-xs font-bold">${item.title}</div>
-                            <div class="text-[10px] text-gray-400">Top: ${item.topBid || 0} coin</div>
-                        </div>
-                        <button class="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-bold cursor-pointer" onclick="adminDeleteAuction('${auctionId}')">O'chirish</button>
-                    </div>`;
-                });
-
-                document.getElementById("auction-list").innerHTML = html || "<p class='text-xs text-gray-400 text-center'>Auksionlar yo'q</p>";
-                document.getElementById("admin-auctions-manage").innerHTML = adminHtml;
-            });
-        }
-
-        function openAuctionDetail(auctionId) {
-            db.collection("auctions").doc(auctionId).get().then((doc) => {
-                if (!doc.exists) return;
-                let item = doc.data();
-                let imgSrc = item.img || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop";
-
-                db.collection("auctions").doc(auctionId).collection("bids").orderBy("amount", "desc").limit(5).get().then((bidsSnapshot) => {
-                    let leadersHtml = "";
-                    let rank = 1;
-                    let userHasBid = 0;
-
-                    bidsSnapshot.forEach((bidDoc) => {
-                        let bData = bidDoc.data();
-                        if (bData.userId === userId) userHasBid = bData.amount;
-                        let isTop = rank === 1 ? "bg-amber-500/20 border-amber-400" : "bg-slate-900/60 border-white/10";
-                        let crown = rank === 1 ? "👑 " : `${rank}. `;
-                        leadersHtml += `<div class="${isTop} border rounded-xl p-2.5 mb-2 flex justify-between items-center text-xs">
-                            <div>${crown}<strong>${bData.name || "Foydalanuvchi"}</strong></div>
-                            <div class="text-amber-400 font-bold">${bData.amount} 🪙</div>
-                        </div>`;
-                        rank++;
-                    });
-
-                    document.getElementById("auction-detail-content").innerHTML = `
-                        <div class="text-center">
-                            <img src="${imgSrc}" class="w-full max-h-48 rounded-2xl object-cover mb-3" onerror="this.src='https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop'">
-                            <h2 class="text-xl font-bold mb-1">${item.title}</h2>
-                            <p class="text-xs text-gray-400 mb-4">Eng ko'p coin taklif qilgan foydalanuvchi yutadi.</p>
-                        </div>
-                        <div class="glass-card p-3 rounded-xl mb-4 flex justify-between text-xs">
-                            <span>Sizning stavkangiz:</span> <strong class="text-amber-400">${userHasBid} 🪙</strong>
-                        </div>
-                        <h3 class="text-sm font-bold mb-2">YETAKCHILAR</h3>
-                        <div class="mb-4">${leadersHtml || "<p class='text-xs text-gray-400'>Hozircha stavka qilinganlar yo'q.</p>"}</div>
-                        <div>
-                            <input type="number" id="bid-input" placeholder="Coin miqdorini kiriting" class="w-full p-3 bg-slate-900 border border-white/20 rounded-xl text-xs text-white mb-2">
-                            <button class="w-full py-3 bg-emerald-500 text-slate-950 font-bold rounded-xl text-xs cursor-pointer" onclick="placeBid('${auctionId}', ${userHasBid})">TAKLIF BERISH</button>
-                        </div>
-                    `;
-                    document.getElementById("auction-detail-view").classList.remove("hidden");
-                });
-            });
-        }
-
-        function closeAuctionDetail() {
-            document.getElementById("auction-detail-view").classList.add("hidden");
-            loadAuctions();
-        }
-
-        function placeBid(auctionId, prevBid) {
-            let amount = parseInt(document.getElementById("bid-input").value);
-            if (isNaN(amount) || amount <= 0) return alert("To'g'ri miqdor kiriting!");
-            
-            let diff = amount - prevBid;
-            if (balance < diff) return alert("Hisobingizda yetarli coin yo'q!");
-
-            balance -= diff;
-            saveData();
-            updateUI();
-
-            db.collection("auctions").doc(auctionId).collection("bids").doc(userId).set({
-                name: userName,
-                amount: amount,
-                userId: userId
-            }, { merge: true }).then(() => {
-                db.collection("auctions").doc(auctionId).update({ topBid: amount });
-                alert("Stavka muvaffaqiyatli qabul qilindi!");
-                openAuctionDetail(auctionId);
-            });
+                alert('Turbo Tap muvaffaqiyatli sotib olindi!');
+            } else if (type === 'energy' && balance >= 2000) {
+                balance -= 2000;
+                maxEnergy += 500;
+                energy = maxEnergy;
+                saveData();
+                updateUI();
+                alert('Energiya sig\'imi oshirildi!');
+            } else {
+                alert('Balansingiz yetarli emas!');
+            }
         }
 
         function watchAd() {
@@ -607,7 +472,7 @@
                     updateUI();
                     btn.disabled = false;
                     btn.innerText = "Ko'rish";
-                    alert("Tabriklaymiz! Reklama ko'rildi va +100 coin qo'shildi.");
+                    alert("Tabriklaymiz! Reklama ko'rildi va +100 CLOUD qo'shildi.");
                 }
             }, 1000);
         }
@@ -619,48 +484,191 @@
             alert("Referal havola nusxalandi!");
         }
 
+        function loadTasks() {
+            db.collection("tasks").get().then((querySnapshot) => {
+                if (querySnapshot.empty) {
+                    db.collection("tasks").add({
+                        title: "Telegram kanalimizga obuna bo'ling",
+                        link: "https://t.me/",
+                        reward: 500
+                    }).then(() => loadTasks());
+                    return;
+                }
+
+                let html = "";
+                let adminHtml = "";
+                querySnapshot.forEach((doc) => {
+                    let task = doc.data();
+                    let taskId = doc.id;
+                    let isDone = completedTasks.includes(taskId);
+                    let reward = task.reward || 500;
+                    let taskLink = task.link || "https://t.me/";
+
+                    html += `<div class="glass-card p-4 rounded-2xl flex items-center justify-between">
+                        <div>
+                            <h3 class="font-semibold text-sm">${task.title}</h3>
+                            <p class="text-xs text-emerald-400">+${reward} CLOUD</p>
+                        </div>
+                        <div>
+                            ${isDone ? 
+                                `<button disabled class="bg-white/10 text-white font-bold px-3 py-2 rounded-xl text-xs">Bajarilgan</button>` : 
+                                `<div class="flex gap-2">
+                                    <a href="${taskLink}" target="_blank" onclick="markVisited('${taskId}')" class="bg-white/10 text-white font-bold px-3 py-2 rounded-xl text-xs flex items-center">Obuna</a>
+                                    <button onclick="verifyTask('${taskId}',${reward})" class="bg-emerald-500 text-slate-950 font-bold px-3 py-2 rounded-xl text-xs">Tekshirish</button>
+                                 </div>`
+                            }
+                        </div>
+                    </div>`;
+
+                    adminHtml += `<div class="glass-card p-3 rounded-2xl flex justify-between items-center text-xs">
+                        <span>${task.title} (+${reward})</span>
+                        <button onclick="adminDeleteTask('${taskId}')" class="bg-red-500 text-white font-bold px-3 py-1.5 rounded-xl">O'chirish</button>
+                    </div>`;
+                });
+                document.getElementById("tasks-list").innerHTML = html;
+                document.getElementById("admin-tasks-manage").innerHTML = adminHtml;
+            });
+        }
+
+        let visitedTasks = [];
+        function markVisited(taskId) {
+            if (!visitedTasks.includes(taskId)) visitedTasks.push(taskId);
+        }
+
+        function verifyTask(taskId, reward) {
+            if (!visitedTasks.includes(taskId)) {
+                alert("Iltimos, avval kanalga o'tib obuna bo'ling!");
+                return;
+            }
+            if (completedTasks.includes(taskId)) return;
+            completedTasks.push(taskId);
+            balance += reward;
+            saveData();
+            updateUI();
+            loadTasks();
+            alert(`Tabriklaymiz! Vazifa bajarildi va +${reward} CLOUD qo'shildi.`);
+        }
+
+        function loadAuctions() {
+            db.collection("auctions").get().then((querySnapshot) => {
+                if (querySnapshot.empty) {
+                    db.collection("auctions").add({
+                        title: "Telegram Premium (1 Oy)",
+                        img: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop",
+                        endTime: new Date().getTime() + (12 * 60 * 60 * 1000),
+                        topBid: 14200,
+                        likes: 71
+                    }).then(() => loadAuctions());
+                    return;
+                }
+
+                let html = "";
+                let adminHtml = "";
+                let now = new Date().getTime();
+
+                querySnapshot.forEach((doc) => {
+                    let item = doc.data();
+                    let auctionId = doc.id;
+                    let timeLeft = (item.endTime || now) - now;
+                    let hours = Math.max(0, Math.floor(timeLeft / (1000 * 60 * 60)));
+                    let minutes = Math.max(0, Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60)));
+                    let imgSrc = item.img || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop";
+
+                    html += `<div onclick="openAuctionDetail('${auctionId}')" class="glass-card rounded-2xl overflow-hidden cursor-pointer border border-white/10 hover:border-emerald-500/50 transition">
+                        <div class="relative w-full h-36 bg-slate-900">
+                            <img src="${imgSrc}" class="w-full h-full object-cover">
+                            <span class="absolute top-2 left-2 bg-slate-950/80 px-2 py-1 rounded-full text-[10px] border border-white/10">❤️ ${item.likes || 45}</span>
+                        </div>
+                        <div class="p-3 flex justify-between items-center">
+                            <div>
+                                <h4 class="font-bold text-sm">${item.title}</h4>
+                                <p class="text-xs text-amber-400 font-bold">💎 ${item.topBid || 0} CLOUD</p>
+                            </div>
+                            <span class="text-[11px] text-emerald-400 font-bold">⏳ ${hours}s ${minutes}d</span>
+                        </div>
+                    </div>`;
+
+                    adminHtml += `<div class="glass-card p-3 rounded-2xl flex justify-between items-center text-xs">
+                        <div>
+                            <strong>${item.title}</strong>
+                            <p class="text-gray-400">Top stavka: ${item.topBid || 0}</p>
+                        </div>
+                        <button onclick="adminDeleteAuction('${auctionId}')" class="bg-red-500 text-white font-bold px-3 py-1.5 rounded-xl">O'chirish</button>
+                    </div>`;
+                });
+                document.getElementById("auction-list").innerHTML = html;
+                document.getElementById("admin-auctions-manage").innerHTML = adminHtml;
+            });
+        }
+
+        function openAuctionDetail(auctionId) {
+            db.collection("auctions").doc(auctionId).get().then((doc) => {
+                if (!doc.exists) return;
+                let item = doc.data();
+                let imgSrc = item.img || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop";
+
+                db.collection("auctions").doc(auctionId).collection("bids").orderBy("amount", "desc").limit(5).get().then((bidsSnapshot) => {
+                    let leadersHtml = "";
+                    let rank = 1;
+                    let userHasBid = 0;
+
+                    bidsSnapshot.forEach((bidDoc) => {
+                        let bData = bidDoc.data();
+                        if (bData.userId === userId) userHasBid = bData.amount;
+                        let crown = rank === 1 ? "👑 " : `${rank}. `;
+                        leadersHtml += `<div class="glass-card p-3 rounded-xl flex justify-between items-center text-xs mb-2">
+                            <span>${crown}<strong>${bData.name || "Foydalanuvchi"}</strong></span>
+                            <span class="text-amber-400 font-bold">${bData.amount} CLOUD</span>
+                        </div>`;
+                        rank++;
+                    });
+
+                    document.getElementById("auction-detail-content").innerHTML = `
+                        <img src="${imgSrc}" class="w-full h-48 rounded-2xl object-cover mb-4">
+                        <h2 class="text-xl font-bold mb-1">${item.title}</h2>
+                        <p class="text-xs text-gray-400 mb-4">Eng ko'p CLOUD taklif qilgan foydalanuvchi yutadi.</p>
+                        <div class="glass-card p-3 rounded-xl mb-4 flex justify-between text-sm">
+                            <span>Sizning stavkangiz:</span>
+                            <strong class="text-amber-400">${userHasBid} CLOUD</strong>
+                        </div>
+                        <h3 class="text-sm font-semibold mb-2">YETAKCHILAR</h3>
+                        <div class="mb-4">${leadersHtml || "<p class='text-xs text-gray-400'>Hozircha stavka qilinganlar yo'q.</p>"}</div>
+                        <input type="number" id="bid-input" placeholder="CLOUD miqdorini kiriting" class="w-full p-3 rounded-xl bg-slate-900 border border-white/10 text-sm mb-3">
+                        <button onclick="placeBid('${auctionId}', ${userHasBid})" class="w-full py-3 bg-emerald-500 text-slate-950 font-bold rounded-xl text-sm">STAVKA QILISH</button>
+                    `;
+                    document.getElementById("auction-detail-view").classList.remove("hidden");
+                });
+            });
+        }
+
+        function closeAuctionDetail() {
+            document.getElementById("auction-detail-view").classList.add("hidden");
+            loadAuctions();
+        }
+
+        function placeBid(auctionId, prevBid) {
+            let amount = parseInt(document.getElementById("bid-input").value);
+            if (isNaN(amount) || amount <= 0) return alert("To'g'ri miqdor kiriting!");
+            let diff = amount - prevBid;
+            if (balance < diff) return alert("Hisobingizda yetarli CLOUD yo'q!");
+
+            balance -= diff;
+            saveData();
+            updateUI();
+
+            db.collection("auctions").doc(auctionId).collection("bids").doc(userId).set({
+                name: userName,
+                amount: amount,
+                userId: userId
+            }, { merge: true }).then(() => {
+                db.collection("auctions").doc(auctionId).update({ topBid: amount });
+                alert("Stavka muvaffaqiyatli qabul qilindi!");
+                openAuctionDetail(auctionId);
+            });
+        }
+
         function adminAddTask() {
             let title = document.getElementById("admin-task-title").value;
             let link = document.getElementById("admin-task-link").value;
             if (!title || !link) return alert("Ma'lumotlarni to'liq kiriting!");
             
-            db.collection("tasks").add({ title, link, reward: 500 }).then(() => {
-                alert("Vazifa qo'shildi!");
-                document.getElementById("admin-task-title").value = "";
-                document.getElementById("admin-task-link").value = "";
-                loadTasks();
-            });
-        }
-
-        function adminDeleteTask(taskId) {
-            db.collection("tasks").doc(taskId).delete().then(() => loadTasks());
-        }
-
-        function adminCreateAuction() {
-            let title = document.getElementById("admin-auction-title").value;
-            let imgUrl = document.getElementById("admin-auction-img-url").value;
-            let hours = parseInt(document.getElementById("admin-auction-hours").value) || 24;
-            if (!title || !imgUrl) return alert("Ma'lumotlarni to'liq kiriting!");
-
-            let endTime = new Date().getTime() + (hours * 60 * 60 * 1000);
-            db.collection("auctions").add({
-                title: title,
-                img: imgUrl,
-                endTime: endTime,
-                topBid: 0,
-                likes: Math.floor(Math.random() * 50) + 20
-            }).then(() => {
-                alert("Auksion boshlandi!");
-                document.getElementById("admin-auction-title").value = "";
-                document.getElementById("admin-auction-img-url").value = "";
-                document.getElementById("admin-auction-hours").value = "";
-                loadAuctions();
-            });
-        }
-
-        function adminDeleteAuction(auctionId) {
-            db.collection("auctions").doc(auctionId).delete().then(() => loadAuctions());
-        }
-    </script>
-</body>
-</html>
