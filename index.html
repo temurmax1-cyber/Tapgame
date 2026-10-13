@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cloud Coin App</title>
+    <title>Cloud Coin Debug</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <style>
         body { background: #0f172a; color: #fff; font-family: sans-serif; text-align: center; padding: 20px; }
         .card { background: #1e293b; padding: 20px; border-radius: 12px; margin-bottom: 15px; }
-        .btn { background: #38bdf8; color: #000; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .tap-btn { width: 150px; height: 150px; border-radius: 50%; background: #0284c7; font-size: 40px; display: flex; align-items: center; justify-content: center; margin: 20px auto; cursor: pointer; border: 4px solid #38bdf8; }
+        #console-log { background: #000; color: #00ff00; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 11px; text-align: left; max-height: 150px; overflow-y: auto; margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -23,9 +23,19 @@
 
 <div class="tap-btn" onclick="tapCoin()">🪙</div>
 
-<p id="status" style="font-size: 12px; color: #94a3b8;">Yuklanmoqda...</p>
+<div class="card">
+    <h4>Xatoliklar konsoli:</h4>
+    <div id="console-log">Ishga tushmoqda...</div>
+</div>
 
 <script>
+    function logToScreen(msg) {
+        let logBox = document.getElementById("console-log");
+        logBox.innerHTML += "<br>" + new Date().toLocaleTimeString() + " > " + msg;
+        logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    // Firebase konfiguratsiyasi
     const firebaseConfig = {
         apiKey: "AZzaSyAnB4d...", 
         authDomain: "claudecoin.firebaseapp.com",
@@ -34,41 +44,49 @@
         messagingSenderId: "123456789",
         appId: "1:123456:web:abcd"
     };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
 
+    try {
+        firebase.initializeApp(firebaseConfig);
+        logToScreen("Firebase ulandi ✅");
+    } catch (e) {
+        logToScreen("Firebase xatosi: " + e.message);
+    }
+
+    const db = firebase.firestore();
     let tg = window.Telegram.WebApp;
     tg.expand();
 
-    // Doimiy barqaror ID (Agar Telegram user bermasa, test ID ishlatiladi)
     let user = tg.initDataUnsafe?.user;
-    let userId = user ? user.id.toString() : "6680296518"; 
-    let balance = 0;
+    let userId = user ? user.id.toString() : "6680296518";
+    logToScreen("Foydalanuvchi ID: " + userId);
 
+    let balance = 0;
     const userRef = db.collection("users").doc(userId);
 
-    // Bazadan ma'lumotni o'qib olish
+    // Bazadan o'qish
     userRef.get().then((doc) => {
         if (doc.exists) {
             balance = doc.data().balance || 0;
+            logToScreen("Bazadan ma'lumot olindi: " + balance);
         } else {
+            logToScreen("Hujjat topilmadi, yangisi yaratilmoqda...");
             userRef.set({ balance: 0 });
         }
         document.getElementById("balance").innerText = balance;
-        document.getElementById("status").innerText = "Ma'lumot bazadan yuklandi ✅";
     }).catch((error) => {
-        document.getElementById("status").innerText = "Xatolik: " + error.message;
+        logToScreen("O'qishda xato: " + error.message);
     });
 
-    // Tanga bosilganda darhol bazaga yozish
+    // Tanga bosish
     function tapCoin() {
         balance += 1;
         document.getElementById("balance").innerText = balance;
-        
+        logToScreen("Bosildi, yangi balans: " + balance);
+
         userRef.set({ balance: balance }, { merge: true }).then(() => {
-            document.getElementById("status").innerText = "Saqlandi 💾";
+            logToScreen("Bazaga saqlandi! 💾");
         }).catch((error) => {
-            document.getElementById("status").innerText = "Saqlashda xato: " + error.message;
+            logToScreen("Saqlashda xato: " + error.message);
         });
     }
 </script>
