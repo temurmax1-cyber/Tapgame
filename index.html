@@ -2,396 +2,691 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CLOUD Coin - Tap Game</title>
-    
-    <!-- Telegram WebApp SDK -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Coin WebApp</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            user-select: none;
-            -webkit-user-select: none;
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.85);
+            --accent-color: #38bdf8;
+            --gold-color: #fbbf24;
+            --text-color: #f8fafc;
+            --secondary-text: #94a3b8;
+            --danger-color: #ef4444;
+            --success-color: #22c55e;
         }
-
         body {
-            background: linear-gradient(135deg, #0f172a, #1e1b4b, #09090b);
-            color: #ffffff;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            overflow: hidden;
-            position: relative;
+            margin: 0; padding: 0;
+            background: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.85)), url('https://images.unsplash.com/photo-1534088568595-a066f410bcda?q=80&w=1000&auto=format&fit=crop');
+            background-size: cover; background-position: center; background-attachment: fixed;
+            color: var(--text-color); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; padding-bottom: 80px;
         }
+        .container { width: 100%; max-width: 480px; padding: 16px; box-sizing: border-box; text-align: center; }
+        .hidden { display: none !important; }
 
-        body::before {
-            content: '';
-            position: absolute;
-            width: 300px;
-            height: 300px;
-            background: rgba(99, 102, 241, 0.15);
-            border-radius: 50%;
-            top: -100px;
-            left: -100px;
-            filter: blur(80px);
-            z-index: 0;
+        .top-balance-card {
+            display: flex; justify-content: center; align-items: center; gap: 8px;
+            background: var(--card-bg); padding: 10px 20px; border-radius: 30px;
+            margin-bottom: 20px; backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1); width: fit-content; margin-left: auto; margin-right: auto;
         }
+        .top-balance-card span { font-size: 20px; font-weight: bold; color: var(--gold-color); }
 
-        .header {
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 10;
+        .balance-card {
+            background: var(--card-bg); border-radius: 20px; padding: 20px;
+            margin-bottom: 20px; box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+            backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1);
         }
+        .balance-title { font-size: 14px; color: var(--secondary-text); }
+        .balance-amount { font-size: 40px; font-weight: bold; color: var(--gold-color); margin-top: 5px; text-shadow: 0 2px 10px rgba(251, 191, 36, 0.3); }
 
-        .app-title {
-            font-size: 18px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            background: linear-gradient(45deg, #38bdf8, #818cf8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .balance-badge {
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            padding: 6px 14px;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 600;
-            font-size: 15px;
-            color: #facc15;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-
-        .main-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 0 20px 80px 20px;
-            z-index: 10;
-            gap: 20px;
-        }
-
-        .total-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 15px 30px;
-            text-align: center;
-            width: 100%;
-            max-width: 320px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
-
-        .total-card span {
-            font-size: 13px;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .total-card h2 {
-            font-size: 32px;
-            font-weight: 800;
-            color: #facc15;
-            margin-top: 5px;
-            text-shadow: 0 2px 10px rgba(250, 204, 21, 0.3);
-        }
-
-        .clicker-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 10px 0;
-        }
-
-        .clicker-btn {
-            width: 230px;
-            height: 230px;
-            border-radius: 50%;
-            border: none;
+        /* Custom Logo Clicker Button */
+        .tap-circle {
+            width: 220px; height: 220px; border-radius: 50%;
             background: transparent;
+            margin: 25px auto; display: flex; align-items: center; justify-content: center;
             cursor: pointer;
-            position: relative;
-            outline: none;
-            transition: transform 0.1s ease;
+            user-select: none; transition: transform 0.08s ease, box-shadow 0.08s ease;
+            border: none; padding: 0; outline: none;
+        }
+        .tap-circle img {
+            width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+            box-shadow: 0 10px 35px rgba(225, 29, 72, 0.4), 0 0 50px rgba(255, 255, 255, 0.1);
+            border: 4px solid rgba(255, 255, 255, 0.3);
+        }
+        .tap-circle:active { 
+            transform: scale(0.93); 
         }
 
-        .clicker-btn:active {
-            transform: scale(0.94);
-        }
+        .energy-bar-container { background: var(--card-bg); border-radius: 10px; height: 14px; width: 100%; overflow: hidden; margin-top: 10px; border: 1px solid rgba(255,255,255,0.1); }
+        .energy-bar { background: linear-gradient(90deg, #38bdf8, #818cf8); height: 100%; width: 100%; transition: width 0.3s; }
 
-        .clicker-btn img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 50%;
-            box-shadow: 0 10px 35px rgba(225, 29, 72, 0.4), 
-                        0 0 50px rgba(255, 255, 255, 0.1);
-            border: 3px solid rgba(255, 255, 255, 0.2);
-        }
+        .section { display: none; width: 100%; }
+        .section.active { display: block; }
 
-        .energy-box {
-            width: 100%;
-            max-width: 320px;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 12px 16px;
-            border-radius: 14px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+        .auction-card {
+            background: var(--card-bg); border-radius: 16px; overflow: hidden;
+            margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4); text-align: left; cursor: pointer;
+            transition: transform 0.2s;
         }
+        .auction-card:hover { transform: translateY(-3px); }
+        .auction-img-container { position: relative; width: 100%; height: 160px; background: #1e293b; }
+        .auction-img-container img { width: 100%; height: 100%; object-fit: cover; }
+        .auction-badge {
+            position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.6);
+            padding: 4px 10px; border-radius: 20px; font-size: 12px; backdrop-filter: blur(5px);
+            display: flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,0.2);
+        }
+        .auction-info { padding: 14px; display: flex; justify-content: space-between; align-items: center; }
+        .auction-title { font-size: 16px; font-weight: bold; }
+        .auction-price { color: var(--gold-color); font-weight: bold; font-size: 15px; }
+        .auction-timer { font-size: 12px; color: var(--success-color); font-weight: bold; }
 
-        .energy-info {
-            display: flex;
-            justify-content: space-between;
-            font-size: 13px;
-            color: #cbd5e1;
-            margin-bottom: 6px;
+        #auction-detail-view {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color); z-index: 2000; overflow-y: auto; padding: 20px; box-sizing: border-box;
+            display: none; text-align: left;
         }
+        .back-btn { background: none; border: none; color: #fff; font-size: 16px; cursor: pointer; margin-bottom: 15px; display: flex; align-items: center; gap: 5px; }
+        
+        .leader-item {
+            background: rgba(30, 41, 59, 0.6); border-radius: 12px; padding: 12px; margin-bottom: 8px;
+            display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.05);
+        }
+        .leader-item.top-1 { background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(30, 41, 59, 0.8)); border: 1px solid var(--gold-color); }
 
-        .energy-bar-bg {
-            width: 100%;
-            height: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-            overflow: hidden;
+        .card {
+            background: var(--card-bg); border-radius: 14px; padding: 16px;
+            margin-bottom: 12px; text-align: left; display: flex;
+            justify-content: space-between; align-items: center;
+            border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px);
         }
-
-        .energy-bar-fill {
-            width: 94%;
-            height: 100%;
-            background: linear-gradient(90deg, #6366f1, #38bdf8);
-            border-radius: 4px;
-            transition: width 0.2s ease;
+        .btn {
+            background: linear-gradient(135deg, #38bdf8, #0284c7); color: #000; border: none;
+            padding: 10px 18px; border-radius: 10px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3); width: 100%;
         }
+        .btn-danger { background: linear-gradient(135deg, #ef4444, #b91c1c); color: #fff; }
 
         .nav-bar {
-            position: fixed;
-            bottom: 12px;
-            left: 12px;
-            right: 12px;
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 22px;
-            display: flex;
-            justify-content: space-around;
-            padding: 10px 6px;
-            z-index: 100;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: rgba(15, 23, 42, 0.95); display: flex; justify-content: space-around;
+            padding: 10px 0; border-top: 1px solid rgba(255,255,255,0.1); box-sizing: border-box; z-index: 1000;
+            backdrop-filter: blur(15px);
         }
-
         .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-decoration: none;
-            color: #94a3b8;
-            font-size: 11px;
-            font-weight: 500;
-            flex: 1;
-            transition: all 0.2s ease;
-            padding: 6px 0;
-            border-radius: 12px;
+            background: none; border: none; color: var(--secondary-text);
+            font-size: 11px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px;
         }
+        .nav-item.active { color: var(--accent-color); font-weight: bold; }
 
-        .nav-item svg {
-            width: 22px;
-            height: 22px;
-            margin-bottom: 4px;
-            fill: currentColor;
-            transition: transform 0.2s ease;
-        }
-
-        .nav-item.active {
-            color: #38bdf8;
-            background: rgba(56, 189, 248, 0.1);
-        }
-
-        .nav-item.active svg {
-            transform: translateY(-2px);
-        }
-
-        .nav-item:active {
-            transform: scale(0.92);
+        input, textarea {
+            width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.1); background: rgba(15, 23, 42, 0.8); color: var(--text-color); box-sizing: border-box;
         }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="app-title">CLOUD Coin</div>
-        <div class="balance-badge">
-            <span>🪙</span> <span id="header-balance">0</span>
+<div class="container">
+    <!-- HOME SECTION -->
+    <div id="home-section" class="section active">
+        <div class="top-balance-card">
+            <span>🪙</span> <span id="top-balance">0</span>
+        </div>
+        <div class="balance-card">
+            <div class="balance-title">Sizning Balansingiz</div>
+            <div class="balance-amount" id="balance">0</div>
+        </div>
+        
+        <!-- Logo Image Clicker Button -->
+        <button class="tap-circle" id="tap-btn">
+            <img src="logo.jpeg" alt="Cloud Logo" onerror="this.src='https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop'">
+        </button>
+
+        <div style="display: flex; justify-content: space-between; font-size: 14px; color: var(--secondary-text); margin-top: 10px;">
+            <span>Energiya:</span>
+            <span id="energy-text">500 / 500</span>
+        </div>
+        <div class="energy-bar-container">
+            <div class="energy-bar" id="energy-bar"></div>
         </div>
     </div>
 
-    <div class="main-container">
-        <div class="total-card">
-            <span>Sizning Balansingiz</span>
-            <h2 id="main-balance">0</h2>
-        </div>
+    <!-- EARN / TASKS SECTION -->
+    <div id="earn-section" class="section">
+        <h2>Vazifalar</h2>
+        <div id="tasks-list">Yuklanmoqda...</div>
+    </div>
 
-        <div class="clicker-wrapper">
-            <button class="clicker-btn" id="clickBtn">
-                <img src="logo.jpeg" alt="Cloud Logo">
-            </button>
+    <!-- AUCTION SECTION -->
+    <div id="auction-section" class="section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2>Auksion</h2>
+            <span style="font-size: 12px; color: var(--secondary-text);">Sovg'ani tanlang</span>
         </div>
+        <div id="auction-list">Yuklanmoqda...</div>
+    </div>
 
-        <div class="energy-box">
-            <div class="energy-info">
-                <span>Energiya:</span>
-                <span id="energy-text">500 / 500</span>
+    <!-- BOOST SECTION -->
+    <div id="boost-section" class="section">
+        <h2>Boost & Reklama</h2>
+        <div class="card">
+            <div>
+                <h4>Reklama ko'rish</h4>
+                <p style="font-size: 12px; color: var(--secondary-text);">Reklama ko'rib +100 coin oling</p>
             </div>
-            <div class="energy-bar-bg">
-                <div class="energy-bar-fill" id="energyFill"></div>
+            <button class="btn" style="width: auto;" onclick="watchAd()">Ko'rish</button>
+        </div>
+    </div>
+
+    <!-- PROFILE SECTION -->
+    <div id="profile-section" class="section">
+        <h2>Profil</h2>
+        <div class="balance-card" style="text-align: left;">
+            <p>👤 Foydalanuvchi: <span id="profile-name" style="color: var(--accent-color);">--</span></p>
+            <p>💰 Jami tangalar: <span id="profile-balance" style="color: var(--accent-color);">0</span></p>
+            <p>👥 Chaqirgan do'stlar: <span id="profile-ref-count">0</span> ta</p>
+            <p>🔗 Sizni taklif qilgan: <span id="invited-by" style="color: var(--gold-color);">Hech kim</span></p>
+            
+            <p style="margin-top: 15px; font-size: 14px;">Sizning referal havolangiz (+500 coin):</p>
+            <input type="text" id="ref-link-input" readonly style="font-size: 12px;">
+            <button class="btn" onclick="copyRefLink()" style="margin-top: 5px;">Havolani nusxalash</button>
+            
+            <h3 style="margin-top: 20px; font-size: 15px;">Siz taklif qilgan do'stlar:</h3>
+            <div id="referrals-list" style="max-height: 150px; overflow-y: auto; font-size: 13px; color: var(--secondary-text); background: rgba(15, 23, 42, 0.5); padding: 10px; border-radius: 8px;">
+                Hozircha do'stlar yo'q.
             </div>
         </div>
     </div>
 
-    <nav class="nav-bar">
-        <a href="#" class="nav-item active">
-            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-            Asosiy
-        </a>
-        <a href="vazifalar.html" class="nav-item">
-            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-            Vazifalar
-        </a>
-        <a href="auksion.html" class="nav-item">
-            <svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
-            Auksion
-        </a>
-        <a href="profil.html" class="nav-item">
-            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-            Profil
-        </a>
-    </nav>
+    <!-- ADMIN SECTION -->
+    <div id="admin-section" class="section">
+        <h2>Admin Panel</h2>
+        <div class="card" style="flex-direction: column; align-items: flex-start;">
+            <h3>Yangi Vazifa Qo'shish</h3>
+            <input type="text" id="admin-task-title" placeholder="Vazifa nomi (Masalan: Kanalga obuna)">
+            <input type="text" id="admin-task-link" placeholder="Kanal havolasi (https://t.me/...)">
+            <button class="btn" onclick="adminAddTask()">Vazifa qo'shish (+500 coin)</button>
+        </div>
+        <div id="admin-tasks-manage" style="width: 100%;"></div>
 
-    <script>
-        // Firebase Konfiguratsiyasi (O'zingizning ma'lumotlaringiz)
-        const firebaseConfig = {
-            apiKey: "AIzaSyD...",
-            authDomain: "claude-coin.firebaseapp.com",
-            projectId: "claude-coin",
-            storageBucket: "claude-coin.appspot.com",
-            messagingSenderId: "...",
-            appId: "..."
-        };
+        <div class="card" style="flex-direction: column; align-items: flex-start; margin-top: 20px;">
+            <h3>Auksionga Sovg'a Qo'shish</h3>
+            <input type="text" id="admin-auction-title" placeholder="Sovg'a nomi (Masalan: Telegram Premium)">
+            <input type="text" id="admin-auction-img-url" placeholder="Rasm havolasi (URL linki)">
+            <input type="number" id="admin-auction-hours" placeholder="Tugash vaqti (Necha soatdan keyin tugasin?)">
+            <button class="btn" onclick="adminCreateAuction()" style="margin-top: 10px;">Auksionni boshlash</button>
+        </div>
+        <div id="admin-auctions-manage" style="width: 100%; margin-top: 15px;"></div>
+    </div>
+</div>
 
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        const db = firebase.firestore();
+<!-- DETAILED AUCTION POPUP SCREEN -->
+<div id="auction-detail-view">
+    <button class="back-btn" onclick="closeAuctionDetail()">← Orqaga</button>
+    <div id="auction-detail-content"></div>
+</div>
 
-        let tg = window.Telegram.WebApp;
-        tg.expand();
+<!-- NAVIGATION BAR -->
+<div class="nav-bar">
+    <button class="nav-item" onclick="switchTab('boost', this)">🚀 Boost</button>
+    <button class="nav-item" onclick="switchTab('earn', this)">📋 Vazifalar</button>
+    <button class="nav-item active" onclick="switchTab('home', this)">🪙 Bosish</button>
+    <button class="nav-item" onclick="switchTab('auction', this)">🔨 Auksion</button>
+    <button class="nav-item" onclick="switchTab('profile', this)">👤 Profil</button>
+    <button id="nav-admin" class="nav-item hidden" onclick="switchTab('admin', this)">⚙️ Admin</button>
+</div>
 
-        let userId = tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id.toString() : "test_user_" + Math.floor(Math.random() * 1000);
-        let balance = 0;
-        let energy = 500;
-        const maxEnergy = 500;
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyD3f-HZK1wclA2fzM1Sg8S1LRluap9qg7k",
+        authDomain: "claude-coin.firebaseapp.com",
+        projectId: "claude-coin",
+        storageBucket: "claude-coin.firebasestorage.app",
+        messagingSenderId: "478948716667",
+        appId: "1:478948716667:web:d6ed5ddd8102e7bd0e72de",
+        measurementId: "G-84V124881S"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-        const mainBalance = document.getElementById('main-balance');
-        const headerBalance = document.getElementById('header-balance');
-        const energyText = document.getElementById('energy-text');
-        const energyFill = document.getElementById('energyFill');
-        const btn = document.getElementById('clickBtn');
+    const ADMIN_ID = "6680296518";
+    let tg = window.Telegram.WebApp;
+    tg.expand();
 
-        // Foydalanuvchi ma'lumotlarini bazadan yuklash
-        async function loadUserData() {
-            try {
-                let userRef = db.collection('users').doc(userId);
-                let doc = await userRef.get();
-                if (doc.exists) {
-                    let data = doc.data();
-                    balance = data.balance || 0;
-                    energy = data.energy !== undefined ? data.energy : 500;
-                } else {
-                    // Yangi foydalanuvchi yaratish va referalni tekshirish
-                    let startParam = tg.initDataUnsafe ? tg.initDataUnsafe.start_param : null;
-                    await userRef.set({
-                        balance: 0,
-                        energy: 500,
-                        referredBy: startParam || null,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
+    let user = tg.initDataUnsafe?.user;
+    let userId = user ? user.id.toString() : ADMIN_ID;
+    let userName = user ? user.first_name : "Admin";
 
-                    // Agar referal orqali kirgan bo'lsa, taklif qilganga bonus yozish
-                    if (startParam && startParam !== userId) {
-                        let referrerRef = db.collection('users').doc(startParam);
-                        let referrerDoc = await referrerRef.get();
-                        if (referrerDoc.exists) {
-                            let refData = referrerDoc.data();
-                            await referrerRef.update({
-                                balance: (refData.balance || 0) + 500
+    let startParam = tg.initDataUnsafe?.start_param;
+    let referrerId = startParam && startParam.startsWith("ref_") ? startParam.replace("ref_", "") : null;
+
+    let balance = 0;
+    let energy = 500;
+    let maxEnergy = 500;
+    let lastEnergyTime = new Date().getTime();
+    let completedTasks = [];
+    let referrals = [];
+    let invitedByName = "Hech kim";
+
+    const userRef = db.collection("users").doc(userId);
+    userRef.get().then((doc) => {
+        let now = new Date().getTime();
+        if (doc.exists) {
+            let data = doc.data();
+            balance = data.balance || 0;
+            energy = data.energy !== undefined ? data.energy : 500;
+            lastEnergyTime = data.lastEnergyTime || now;
+            completedTasks = data.completedTasks || [];
+            referrals = data.referrals || [];
+            if (data.invitedBy) invitedByName = data.invitedBy;
+
+            let elapsed = now - lastEnergyTime;
+            let dayMs = 24 * 60 * 60 * 1000;
+            if (elapsed >= dayMs) {
+                energy = maxEnergy;
+                lastEnergyTime = now;
+            } else {
+                let restored = Math.floor((elapsed / dayMs) * maxEnergy);
+                energy = Math.min(maxEnergy, energy + restored);
+                if (restored > 0) lastEnergyTime = now;
+            }
+        } else {
+            let newUserData = {
+                balance: 0,
+                energy: 500,
+                lastEnergyTime: now,
+                completedTasks: [],
+                referrals: [],
+                name: userName,
+                invitedBy: "Hech kim"
+            };
+
+            if (referrerId && referrerId !== userId) {
+                newUserData.invitedBy = "Taklif havolasi orqali";
+                invitedByName = "Taklif havolasi orqali";
+
+                let referrerRef = db.collection("users").doc(referrerId);
+                referrerRef.get().then((refDoc) => {
+                    if (refDoc.exists) {
+                        let refData = refDoc.data();
+                        let currentRefs = refData.referrals || [];
+                        let alreadyExists = currentRefs.some(r => r.id === userId);
+                        
+                        if (!alreadyExists) {
+                            currentRefs.push({ id: userId, name: userName });
+                            let newBal = (refData.balance || 0) + 500;
+                            referrerRef.update({
+                                referrals: currentRefs,
+                                balance: newBal
                             });
                         }
                     }
-                }
-                updateUI();
-            } catch (e) {
-                console.error("Ma'lumotlarni yuklashda xatolik: ", e);
+                });
             }
+
+            userRef.set(newUserData);
         }
+        updateUI();
+        loadTasks();
+        loadAuctions();
+    });
 
-        function updateUI() {
-            mainBalance.textContent = balance;
-            headerBalance.textContent = balance;
-            energyText.textContent = `${energy} / ${maxEnergy}`;
-            energyFill.style.width = `${(energy / maxEnergy) * 100}%`;
+    function saveData() {
+        userRef.set({
+            balance: balance,
+            energy: energy,
+            lastEnergyTime: lastEnergyTime,
+            completedTasks: completedTasks,
+            referrals: referrals,
+            name: userName,
+            invitedBy: invitedByName
+        }, { merge: true });
+    }
+
+    function updateUI() {
+        document.getElementById("balance").innerText = balance;
+        document.getElementById("top-balance").innerText = balance;
+        document.getElementById("profile-balance").innerText = balance;
+        document.getElementById("profile-name").innerText = userName;
+        document.getElementById("energy-text").innerText = `${Math.floor(energy)} / ${maxEnergy}`;
+        document.getElementById("energy-bar").style.width = (energy / maxEnergy) * 100 + "%";
+        document.getElementById("profile-ref-count").innerText = referrals.length;
+        document.getElementById("invited-by").innerText = invitedByName;
+        
+        let refsHtml = referrals.length > 0 ? referrals.map(r => `<div>👤 ${r.name} (+500 🪙)</div>`).join('') : "Hozircha do'stlar yo'q.";
+        document.getElementById("referrals-list").innerHTML = refsHtml;
+
+        let botUsername = "Cloudcointapbot";
+        let refLink = `https://t.me/${botUsername}?start=ref_${userId}`;
+        document.getElementById("ref-link-input").value = refLink;
+
+        if (userId === ADMIN_ID) {
+            document.getElementById("nav-admin").classList.remove("hidden");
+        } else {
+            document.getElementById("nav-admin").classList.add("hidden");
         }
+    }
 
-        // Bosish mexanizmi
-        btn.addEventListener('click', async () => {
-            if (energy > 0) {
-                balance += 1;
-                energy -= 1;
-                updateUI();
+    function switchTab(tabName, el) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        document.getElementById(`${tabName}-section`).classList.add('active');
+        el.classList.add('active');
+    }
 
-                if (window.Telegram && tg.HapticFeedback) {
-                    tg.HapticFeedback.impactOccurred('light');
-                }
+    document.getElementById("tap-btn").addEventListener("click", () => {
+        if (energy > 0) {
+            balance += 1;
+            energy -= 1;
+            saveData();
+            updateUI();
+        }
+    });
 
-                // Firestore-ga saqlash
-                try {
-                    await db.collection('users').doc(userId).set({
-                        balance: balance,
-                        energy: energy
-                    }, { merge: true });
-                } catch (e) {
-                    console.error("Saqlashda xato: ", e);
-                }
+    setInterval(() => {
+        let now = new Date().getTime();
+        let dayMs = 24 * 60 * 60 * 1000;
+        let elapsed = now - lastEnergyTime;
+        
+        if (energy < maxEnergy && elapsed > 0) {
+            let restored = (elapsed / dayMs) * maxEnergy;
+            energy = Math.min(maxEnergy, energy + restored);
+            lastEnergyTime = now;
+            saveData();
+            updateUI();
+        }
+    }, 10000);
+
+    function loadTasks() {
+        db.collection("tasks").get().then((querySnapshot) => {
+            if (querySnapshot.empty) {
+                db.collection("tasks").add({
+                    title: "Telegram kanalimizga obuna bo'ling",
+                    link: "https://t.me/",
+                    reward: 500
+                }).then(() => loadTasks());
+                return;
             }
+
+            let html = "";
+            let adminHtml = "";
+            querySnapshot.forEach((doc) => {
+                let task = doc.data();
+                let taskId = doc.id;
+                let isDone = completedTasks.includes(taskId);
+                let reward = task.reward || 500;
+                let taskLink = task.link || "https://t.me/";
+
+                html += `<div class="card">
+                    <div>
+                        <h4>${task.title}</h4>
+                        <p style="font-size: 12px; color: var(--secondary-text);">+${reward} Coin</p>
+                    </div>
+                    <div>
+                        ${isDone ? 
+                            `<button class="btn" disabled style="background: #64748b; color:#fff; width:auto;">Bajarilgan</button>` : 
+                            `<div style="display:flex; gap:6px;">
+                                <a href="${taskLink}" target="_blank" class="btn" style="text-decoration:none; padding:10px 12px; font-size:12px;" onclick="markVisited('${taskId}')">Obuna</a>
+                                <button class="btn" style="padding:10px 12px; font-size:12px; background:var(--success-color); color:#fff;" onclick="verifyTask('${taskId}',${reward})">Tekshirish</button>
+                             </div>`
+                        }
+                    </div>
+                </div>`;
+
+                adminHtml += `<div class="card">
+                    <span>${task.title} (+${reward})</span>
+                    <button class="btn btn-danger" style="width: auto;" onclick="adminDeleteTask('${taskId}')">O'chirish</button>
+                </div>`;
+            });
+            document.getElementById("tasks-list").innerHTML = html;
+            document.getElementById("admin-tasks-manage").innerHTML = adminHtml;
         });
+    }
 
-        // Energiyani vaqt o'tishi bilan tiklash
-        setInterval(() => {
-            if (energy < maxEnergy) {
-                energy += 1;
+    let visitedTasks = [];
+    function markVisited(taskId) {
+        if (!visitedTasks.includes(taskId)) visitedTasks.push(taskId);
+    }
+
+    function verifyTask(taskId, reward) {
+        if (!visitedTasks.includes(taskId)) {
+            alert("Iltimos, avval kanalga o'tib obuna bo'ling!");
+            return;
+        }
+
+        let btn = event.target;
+        btn.innerText = "Tekshirilmoqda...";
+        btn.disabled = true;
+
+        setTimeout(() => {
+            if (completedTasks.includes(taskId)) return;
+            completedTasks.push(taskId);
+            balance += reward;
+            saveData();
+            updateUI();
+            loadTasks();
+            alert(`Tabriklaymiz! Vazifa bajarildi va +${reward} coin qo'shildi.`);
+        }, 1200);
+    }
+
+    function loadAuctions() {
+        db.collection("auctions").get().then((querySnapshot) => {
+            if (querySnapshot.empty) {
+                db.collection("auctions").add({
+                    title: "Telegram Premium (1 Oy)",
+                    img: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop",
+                    endTime: new Date().getTime() + (12 * 60 * 60 * 1000),
+                    topBid: 14200,
+                    likes: 71
+                }).then(() => loadAuctions());
+                return;
+            }
+
+            let html = "";
+            let adminHtml = "";
+            let now = new Date().getTime();
+
+            querySnapshot.forEach((doc) => {
+                let item = doc.data();
+                let auctionId = doc.id;
+                
+                let endTime = item.endTime || (now + 3600000);
+                let timeLeft = endTime - now;
+                let hours = Math.max(0, Math.floor(timeLeft / (1000 * 60 * 60)));
+                let minutes = Math.max(0, Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60)));
+                let seconds = Math.max(0, Math.floor((timeLeft % (1000 * 60)) / 1000));
+
+                let imgSrc = item.img || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop";
+
+                html += `<div class="auction-card" onclick="openAuctionDetail('${auctionId}')">
+                    <div class="auction-img-container">
+                        <div class="auction-badge">❤️ ${item.likes || 45}</div>
+                        <img src="${imgSrc}" alt="Auction" onerror="this.src='https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop'">
+                    </div>
+                    <div class="auction-info">
+                        <div>
+                            <div class="auction-title">${item.title}</div>
+                            <div class="auction-price">💎 ${item.topBid || 0} 🪙</div>
+                        </div>
+                        <div class="auction-timer">⏳ ${hours}s ${minutes}d ${seconds}s</div>
+                    </div>
+                </div>`;
+
+                adminHtml += `<div class="card">
+                    <div>
+                        <h4>${item.title}</h4>
+                        <p style="font-size:11px; color:var(--secondary-text);">Top stavka: ${item.topBid || 0} coin</p>
+                    </div>
+                    <button class="btn btn-danger" style="width:auto;" onclick="adminDeleteAuction('${auctionId}')">O'chirish</button>
+                </div>`;
+            });
+
+            document.getElementById("auction-list").innerHTML = html;
+            document.getElementById("admin-auctions-manage").innerHTML = adminHtml;
+        });
+    }
+
+    function openAuctionDetail(auctionId) {
+        db.collection("auctions").doc(auctionId).get().then((doc) => {
+            if (!doc.exists) return;
+            let item = doc.data();
+            let imgSrc = item.img || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop";
+
+            db.collection("auctions").doc(auctionId).collection("bids").orderBy("amount", "desc").limit(5).get().then((bidsSnapshot) => {
+                let leadersHtml = "";
+                let rank = 1;
+                let userHasBid = 0;
+
+                bidsSnapshot.forEach((bidDoc) => {
+                    let bData = bidDoc.data();
+                    if (bData.userId === userId) userHasBid = bData.amount;
+
+                    let isTop = rank === 1 ? "top-1" : "";
+                    let crown = rank === 1 ? "👑 " : `${rank}. `;
+                    leadersHtml += `<div class="leader-item ${isTop}">
+                        <div>${crown}<strong>${bData.name || "Foydalanuvchi"}</strong></div>
+                        <div style="color:var(--gold-color); font-weight:bold;">${bData.amount} 🪙</div>
+                    </div>`;
+                    rank++;
+                });
+
+                document.getElementById("auction-detail-content").innerHTML = `
+                    <div style="text-align: center;">
+                        <img src="${imgSrc}" style="width: 100%; max-height: 220px; border-radius: 16px; object-fit: cover; margin-bottom: 15px;" onerror="this.src='https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop'">
+                        <h2>${item.title}</h2>
+                        <p style="color: var(--secondary-text); font-size: 13px;">Eng ko'p coin taklif qilgan foydalanuvchi yutadi.</p>
+                    </div>
+
+                    <div style="background: var(--card-bg); padding: 15px; border-radius: 14px; margin: 15px 0; border: 1px solid rgba(255,255,255,0.1);">
+                        <p style="display:flex; justify-content:space-between; margin:5px 0;"><span>Sizning stavkangiz:</span> <strong style="color:var(--accent-color);">${userHasBid} 🪙</strong></p>
+                    </div>
+
+                    <h3>YETAKCHILAR</h3>
+                    <div style="margin-bottom: 20px;">
+                        ${leadersHtml || "<p style='color:var(--secondary-text);'>Hozircha stavka qilinganlar yo'q. Birinchi bo'ling!</p>"}
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <input type="number" id="bid-input" placeholder="Coin miqdorini kiriting">
+                        <button class="btn" style="margin-top: 10px;" onclick="placeBid('${auctionId}', ${userHasBid})">TAKLIF BERISH</button>
+                    </div>
+                `;
+                document.getElementById("auction-detail-view").style.display = "block";
+            });
+        });
+    }
+
+    function closeAuctionDetail() {
+        document.getElementById("auction-detail-view").style.display = "none";
+        loadAuctions();
+    }
+
+    function placeBid(auctionId, prevBid) {
+        let amount = parseInt(document.getElementById("bid-input").value);
+        if (isNaN(amount) || amount <= 0) return alert("To'g'ri miqdor kiriting!");
+        
+        let diff = amount - prevBid;
+        if (balance < diff) return alert("Hisobingizda yetarli coin yo'q!");
+
+        balance -= diff;
+        saveData();
+        updateUI();
+
+        db.collection("auctions").doc(auctionId).collection("bids").doc(userId).set({
+            name: userName,
+            amount: amount,
+            userId: userId
+        }, { merge: true }).then(() => {
+            db.collection("auctions").doc(auctionId).update({ topBid: amount });
+            alert("Stavka muvaffaqiyatli qabul qilindi!");
+            openAuctionDetail(auctionId);
+        });
+    }
+
+    function watchAd() {
+        let btn = event.target;
+        btn.disabled = true;
+        let count = 5;
+        btn.innerText = `Reklama: ${count}s`;
+
+        let timer = setInterval(() => {
+            count--;
+            if (count > 0) {
+                btn.innerText = `Reklama: ${count}s`;
+            } else {
+                clearInterval(timer);
+                balance += 100;
+                saveData();
                 updateUI();
+                btn.disabled = false;
+                btn.innerText = "Ko'rish";
+                alert("Tabriklaymiz! Reklama ko'rildi va +100 coin qo'shildi.");
             }
         }, 1000);
+    }
 
-        loadUserData();
-    </script>
+    function copyRefLink() {
+        let input = document.getElementById("ref-link-input");
+        input.select();
+        document.execCommand("copy");
+        alert("Referal havola nusxalandi!");
+    }
+
+    function adminAddTask() {
+        let title = document.getElementById("admin-task-title").value;
+        let link = document.getElementById("admin-task-link").value;
+        let reward = 500;
+        
+        if (!title || !link) return alert("Ma'lumotlarni to'liq kiriting!");
+        
+        db.collection("tasks").add({ title, link, reward }).then(() => {
+            alert("Vazifa qo'shildi! (+500 coin)");
+            document.getElementById("admin-task-title").value = "";
+            document.getElementById("admin-task-link").value = "";
+            loadTasks();
+        });
+    }
+
+    function adminDeleteTask(taskId) {
+        db.collection("tasks").doc(taskId).delete().then(() => loadTasks());
+    }
+
+    function adminCreateAuction() {
+        let title = document.getElementById("admin-auction-title").value;
+        let imgUrl = document.getElementById("admin-auction-img-url").value;
+        let hours = parseInt(document.getElementById("admin-auction-hours").value) || 24;
+        
+        if (!title || !imgUrl) return alert("Sarlavha va rasm havolasini kiriting!");
+
+        let endTime = new Date().getTime() + (hours * 60 * 60 * 1000);
+
+        db.collection("auctions").add({
+            title: title,
+            img: imgUrl,
+            endTime: endTime,
+            topBid: 0,
+            likes: Math.floor(Math.random() * 50) + 20
+        }).then(() => {
+            alert("Auksion muvaffaqiyatli boshlandi!");
+            document.getElementById("admin-auction-title").value = "";
+            document.getElementById("admin-auction-img-url").value = "";
+            document.getElementById("admin-auction-hours").value = "";
+            loadAuctions();
+        });
+    }
+
+    function adminDeleteAuction(auctionId) {
+        db.collection("auctions").doc(auctionId).delete().then(() => loadAuctions());
+    }
+</script>
 </body>
 </html>
