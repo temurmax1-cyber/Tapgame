@@ -3,86 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cloud Coin WebApp</title>
+    <title>Cloud Coin - Notcoin Style</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: rgba(30, 41, 59, 0.85);
-            --accent-color: #38bdf8;
-            --gold-color: #fbbf24;
-            --text-color: #f8fafc;
-            --secondary-text: #94a3b8;
-            --danger-color: #ef4444;
-            --success-color: #22c55e;
+            --bg-color: #0b0e14;
+            --card-bg: #161b22;
+            --accent-color: #00f2fe;
+            --gold-color: #ffd700;
+            --text-color: #ffffff;
+            --secondary-text: #8b949e;
+            --danger-color: #f85149;
+            --success-color: #3fb950;
         }
         body {
             margin: 0; padding: 0;
-            background: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.85)), url('https://images.unsplash.com/photo-1534088568595-a066f410bcda?q=80&w=1000&auto=format&fit=crop');
-            background-size: cover; background-position: center; background-attachment: fixed;
-            color: var(--text-color); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color); 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             display: flex; flex-direction: column; align-items: center;
-            min-height: 100vh; padding-bottom: 80px;
+            min-height: 100vh; padding-bottom: 90px;
         }
-        .container { width: 100%; max-width: 480px; padding: 16px; box-sizing: border-box; text-align: center; }
+        .container { width: 100%; max-width: 480px; padding: 20px; box-sizing: border-box; text-align: center; }
         .hidden { display: none !important; }
 
+        /* Notcoin style top balance */
         .top-balance-card {
             display: flex; justify-content: center; align-items: center; gap: 8px;
-            background: var(--card-bg); padding: 10px 20px; border-radius: 30px;
-            margin-bottom: 20px; backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.1); width: fit-content; margin-left: auto; margin-right: auto;
+            background: rgba(22, 27, 34, 0.7); padding: 8px 18px; border-radius: 20px;
+            margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.06); width: fit-content; margin-left: auto; margin-right: auto;
         }
-        .top-balance-card span { font-size: 20px; font-weight: bold; color: var(--gold-color); }
+        .top-balance-card span { font-size: 18px; font-weight: 800; color: var(--gold-color); }
 
         .balance-card {
-            background: var(--card-bg); border-radius: 20px; padding: 20px;
-            margin-bottom: 20px; box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-            backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1);
-        }
-        .balance-title { font-size: 14px; color: var(--secondary-text); }
-        .balance-amount { font-size: 40px; font-weight: bold; color: var(--gold-color); margin-top: 5px; text-shadow: 0 2px 10px rgba(251, 191, 36, 0.3); }
-
-        /* Custom Logo Clicker Button */
-        .tap-circle {
-            width: 220px; height: 220px; border-radius: 50%;
             background: transparent;
-            margin: 25px auto; display: flex; align-items: center; justify-content: center;
+            margin-bottom: 10px;
+        }
+        .balance-title { font-size: 13px; color: var(--secondary-text); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        .balance-amount { font-size: 48px; font-weight: 900; color: var(--text-color); margin-top: 5px; letter-spacing: -1px; }
+
+        /* Notcoin style big central logo clicker */
+        .tap-circle {
+            width: 260px; height: 260px; border-radius: 50%;
+            background: transparent;
+            margin: 20px auto; display: flex; align-items: center; justify-content: center;
             cursor: pointer;
-            user-select: none; transition: transform 0.08s ease, box-shadow 0.08s ease;
+            user-select: none; transition: transform 0.05s ease;
             border: none; padding: 0; outline: none;
         }
         .tap-circle img {
             width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
-            box-shadow: 0 10px 35px rgba(225, 29, 72, 0.4), 0 0 50px rgba(255, 255, 255, 0.1);
-            border: 4px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 40px rgba(255, 255, 255, 0.05);
+            border: 4px solid rgba(255, 255, 255, 0.1);
         }
         .tap-circle:active { 
-            transform: scale(0.93); 
+            transform: scale(0.92); 
         }
 
-        .energy-bar-container { background: var(--card-bg); border-radius: 10px; height: 14px; width: 100%; overflow: hidden; margin-top: 10px; border: 1px solid rgba(255,255,255,0.1); }
+        /* Energy section */
+        .energy-container {
+            width: 100%;
+            padding: 0 10px;
+            margin-top: 15px;
+        }
+        .energy-info {
+            display: flex; justify-content: space-between; font-size: 14px; font-weight: 700; color: var(--secondary-text); margin-bottom: 8px;
+        }
+        .energy-bar-container { background: #21262d; border-radius: 8px; height: 12px; width: 100%; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
         .energy-bar { background: linear-gradient(90deg, #38bdf8, #818cf8); height: 100%; width: 100%; transition: width 0.3s; }
 
-        .section { display: none; width: 100%; }
+        .section { display: none; width: 100%; text-align: left; }
         .section.active { display: block; }
+        .section h2 { text-align: center; margin-bottom: 20px; font-weight: 800; font-size: 22px; }
 
+        /* Notcoin style cards */
         .auction-card {
             background: var(--card-bg); border-radius: 16px; overflow: hidden;
-            margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.4); text-align: left; cursor: pointer;
-            transition: transform 0.2s;
+            margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.06);
+            cursor: pointer; transition: transform 0.2s;
         }
-        .auction-card:hover { transform: translateY(-3px); }
-        .auction-img-container { position: relative; width: 100%; height: 160px; background: #1e293b; }
+        .auction-card:hover { transform: translateY(-2px); }
+        .auction-img-container { position: relative; width: 100%; height: 160px; background: #0d1117; }
         .auction-img-container img { width: 100%; height: 100%; object-fit: cover; }
         .auction-badge {
-            position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.6);
-            padding: 4px 10px; border-radius: 20px; font-size: 12px; backdrop-filter: blur(5px);
-            display: flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,0.2);
+            position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7);
+            padding: 4px 10px; border-radius: 20px; font-size: 12px;
+            display: flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,0.1);
         }
         .auction-info { padding: 14px; display: flex; justify-content: space-between; align-items: center; }
         .auction-title { font-size: 16px; font-weight: bold; }
@@ -94,42 +103,46 @@
             background: var(--bg-color); z-index: 2000; overflow-y: auto; padding: 20px; box-sizing: border-box;
             display: none; text-align: left;
         }
-        .back-btn { background: none; border: none; color: #fff; font-size: 16px; cursor: pointer; margin-bottom: 15px; display: flex; align-items: center; gap: 5px; }
+        .back-btn { background: none; border: none; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; margin-bottom: 15px; display: flex; align-items: center; gap: 5px; }
         
         .leader-item {
-            background: rgba(30, 41, 59, 0.6); border-radius: 12px; padding: 12px; margin-bottom: 8px;
+            background: var(--card-bg); border-radius: 12px; padding: 12px; margin-bottom: 8px;
             display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.05);
         }
-        .leader-item.top-1 { background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(30, 41, 59, 0.8)); border: 1px solid var(--gold-color); }
+        .leader-item.top-1 { background: rgba(251, 191, 36, 0.1); border: 1px solid var(--gold-color); }
 
         .card {
             background: var(--card-bg); border-radius: 14px; padding: 16px;
             margin-bottom: 12px; text-align: left; display: flex;
             justify-content: space-between; align-items: center;
-            border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.06);
         }
         .btn {
-            background: linear-gradient(135deg, #38bdf8, #0284c7); color: #000; border: none;
-            padding: 10px 18px; border-radius: 10px; font-weight: bold; cursor: pointer;
-            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3); width: 100%;
+            background: #ffffff; color: #000000; border: none;
+            padding: 12px 20px; border-radius: 12px; font-weight: 800; cursor: pointer;
+            width: 100%; font-size: 14px; transition: opacity 0.2s;
         }
-        .btn-danger { background: linear-gradient(135deg, #ef4444, #b91c1c); color: #fff; }
+        .btn:active { opacity: 0.8; }
+        .btn-danger { background: var(--danger-color); color: #fff; }
 
+        /* Notcoin style Bottom Navigation Bar */
         .nav-bar {
             position: fixed; bottom: 0; left: 0; width: 100%;
-            background: rgba(15, 23, 42, 0.95); display: flex; justify-content: space-around;
-            padding: 10px 0; border-top: 1px solid rgba(255,255,255,0.1); box-sizing: border-box; z-index: 1000;
-            backdrop-filter: blur(15px);
+            background: rgba(13, 17, 23, 0.95); display: flex; justify-content: space-around;
+            padding: 10px 4px; border-top: 1px solid rgba(255,255,255,0.06); box-sizing: border-box; z-index: 1000;
+            backdrop-filter: blur(20px);
         }
         .nav-item {
             background: none; border: none; color: var(--secondary-text);
             font-size: 11px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px;
+            font-weight: 600; flex: 1; padding: 6px 0; border-radius: 10px; transition: color 0.2s;
         }
-        .nav-item.active { color: var(--accent-color); font-weight: bold; }
+        .nav-item.active { color: var(--text-color); background: rgba(255,255,255,0.05); }
 
         input, textarea {
-            width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.1); background: rgba(15, 23, 42, 0.8); color: var(--text-color); box-sizing: border-box;
+            width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.08); background: #0d1117; color: var(--text-color); box-sizing: border-box;
+            font-size: 14px; outline: none;
         }
     </style>
 </head>
@@ -137,7 +150,7 @@
 
 <div class="container">
     <!-- HOME SECTION -->
-    <div id="home-section" class="section active">
+    <div id="home-section" class="section active" style="text-align: center;">
         <div class="top-balance-card">
             <span>🪙</span> <span id="top-balance">0</span>
         </div>
@@ -146,17 +159,19 @@
             <div class="balance-amount" id="balance">0</div>
         </div>
         
-        <!-- Logo Image Clicker Button -->
+        <!-- Notcoin Style Logo Clicker -->
         <button class="tap-circle" id="tap-btn">
             <img src="logo.jpeg" alt="Cloud Logo" onerror="this.src='https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop'">
         </button>
 
-        <div style="display: flex; justify-content: space-between; font-size: 14px; color: var(--secondary-text); margin-top: 10px;">
-            <span>Energiya:</span>
-            <span id="energy-text">500 / 500</span>
-        </div>
-        <div class="energy-bar-container">
-            <div class="energy-bar" id="energy-bar"></div>
+        <div class="energy-container">
+            <div class="energy-info">
+                <span>⚡ Energiya</span>
+                <span id="energy-text">500 / 500</span>
+            </div>
+            <div class="energy-bar-container">
+                <div class="energy-bar" id="energy-bar"></div>
+            </div>
         </div>
     </div>
 
@@ -183,25 +198,25 @@
                 <h4>Reklama ko'rish</h4>
                 <p style="font-size: 12px; color: var(--secondary-text);">Reklama ko'rib +100 coin oling</p>
             </div>
-            <button class="btn" style="width: auto;" onclick="watchAd()">Ko'rish</button>
+            <button class="btn" style="width: auto; padding: 10px 16px;" onclick="watchAd()">Ko'rish</button>
         </div>
     </div>
 
     <!-- PROFILE SECTION -->
     <div id="profile-section" class="section">
         <h2>Profil</h2>
-        <div class="balance-card" style="text-align: left;">
+        <div class="card" style="flex-direction: column; align-items: flex-start; gap: 8px;">
             <p>👤 Foydalanuvchi: <span id="profile-name" style="color: var(--accent-color);">--</span></p>
-            <p>💰 Jami tangalar: <span id="profile-balance" style="color: var(--accent-color);">0</span></p>
+            <p>💰 Jami tangalar: <span id="profile-balance" style="color: var(--gold-color);">0</span></p>
             <p>👥 Chaqirgan do'stlar: <span id="profile-ref-count">0</span> ta</p>
             <p>🔗 Sizni taklif qilgan: <span id="invited-by" style="color: var(--gold-color);">Hech kim</span></p>
             
-            <p style="margin-top: 15px; font-size: 14px;">Sizning referal havolangiz (+500 coin):</p>
+            <p style="margin-top: 10px; font-size: 13px; color: var(--secondary-text);">Sizning referal havolangiz (+500 coin):</p>
             <input type="text" id="ref-link-input" readonly style="font-size: 12px;">
             <button class="btn" onclick="copyRefLink()" style="margin-top: 5px;">Havolani nusxalash</button>
             
-            <h3 style="margin-top: 20px; font-size: 15px;">Siz taklif qilgan do'stlar:</h3>
-            <div id="referrals-list" style="max-height: 150px; overflow-y: auto; font-size: 13px; color: var(--secondary-text); background: rgba(15, 23, 42, 0.5); padding: 10px; border-radius: 8px;">
+            <h3 style="margin-top: 15px; font-size: 14px;">Siz taklif qilgan do'stlar:</h3>
+            <div id="referrals-list" style="width: 100%; max-height: 130px; overflow-y: auto; font-size: 13px; color: var(--secondary-text); background: #0d1117; padding: 10px; border-radius: 8px; box-sizing: border-box;">
                 Hozircha do'stlar yo'q.
             </div>
         </div>
@@ -214,7 +229,7 @@
             <h3>Yangi Vazifa Qo'shish</h3>
             <input type="text" id="admin-task-title" placeholder="Vazifa nomi (Masalan: Kanalga obuna)">
             <input type="text" id="admin-task-link" placeholder="Kanal havolasi (https://t.me/...)">
-            <button class="btn" onclick="adminAddTask()">Vazifa qo'shish (+500 coin)</button>
+            <button class="btn" onclick="adminAddTask()" style="margin-top: 8px;">Vazifa qo'shish (+500 coin)</button>
         </div>
         <div id="admin-tasks-manage" style="width: 100%;"></div>
 
@@ -433,10 +448,10 @@
                     </div>
                     <div>
                         ${isDone ? 
-                            `<button class="btn" disabled style="background: #64748b; color:#fff; width:auto;">Bajarilgan</button>` : 
+                            `<button class="btn" disabled style="background: #30363d; color:#8b949e; width:auto; padding:10px 14px;">Bajarilgan</button>` : 
                             `<div style="display:flex; gap:6px;">
-                                <a href="${taskLink}" target="_blank" class="btn" style="text-decoration:none; padding:10px 12px; font-size:12px;" onclick="markVisited('${taskId}')">Obuna</a>
-                                <button class="btn" style="padding:10px 12px; font-size:12px; background:var(--success-color); color:#fff;" onclick="verifyTask('${taskId}',${reward})">Tekshirish</button>
+                                <a href="${taskLink}" target="_blank" class="btn" style="text-decoration:none; padding:10px 12px; font-size:12px; background:#21262d; color:#fff;" onclick="markVisited('${taskId}')">Obuna</a>
+                                <button class="btn" style="padding:10px 12px; font-size:12px; background:#ffffff; color:#000;" onclick="verifyTask('${taskId}',${reward})">Tekshirish</button>
                              </div>`
                         }
                     </div>
@@ -444,7 +459,7 @@
 
                 adminHtml += `<div class="card">
                     <span>${task.title} (+${reward})</span>
-                    <button class="btn btn-danger" style="width: auto;" onclick="adminDeleteTask('${taskId}')">O'chirish</button>
+                    <button class="btn btn-danger" style="width: auto; padding:8px 14px;" onclick="adminDeleteTask('${taskId}')">O'chirish</button>
                 </div>`;
             });
             document.getElementById("tasks-list").innerHTML = html;
@@ -526,7 +541,7 @@
                         <h4>${item.title}</h4>
                         <p style="font-size:11px; color:var(--secondary-text);">Top stavka: ${item.topBid || 0} coin</p>
                     </div>
-                    <button class="btn btn-danger" style="width:auto;" onclick="adminDeleteAuction('${auctionId}')">O'chirish</button>
+                    <button class="btn btn-danger" style="width:auto; padding:8px 14px;" onclick="adminDeleteAuction('${auctionId}')">O'chirish</button>
                 </div>`;
             });
 
@@ -566,11 +581,11 @@
                         <p style="color: var(--secondary-text); font-size: 13px;">Eng ko'p coin taklif qilgan foydalanuvchi yutadi.</p>
                     </div>
 
-                    <div style="background: var(--card-bg); padding: 15px; border-radius: 14px; margin: 15px 0; border: 1px solid rgba(255,255,255,0.1);">
-                        <p style="display:flex; justify-content:space-between; margin:5px 0;"><span>Sizning stavkangiz:</span> <strong style="color:var(--accent-color);">${userHasBid} 🪙</strong></p>
+                    <div class="card" style="margin: 15px 0;">
+                        <p style="display:flex; justify-content:space-width; width:100%; margin:0;"><span>Sizning stavkangiz:</span> <strong style="color:var(--gold-color);">${userHasBid} 🪙</strong></p>
                     </div>
 
-                    <h3>YETAKCHILAR</h3>
+                    <h3 style="margin-bottom: 10px; font-size: 16px;">YETAKCHILAR</h3>
                     <div style="margin-bottom: 20px;">
                         ${leadersHtml || "<p style='color:var(--secondary-text);'>Hozircha stavka qilinganlar yo'q. Birinchi bo'ling!</p>"}
                     </div>
@@ -665,7 +680,7 @@
         let imgUrl = document.getElementById("admin-auction-img-url").value;
         let hours = parseInt(document.getElementById("admin-auction-hours").value) || 24;
         
-        if (!title || !imgUrl) return alert("Sarlavha va rasm havolasini kiriting!");
+        | if (!title || !imgUrl) return alert("Sarlavha va rasm havolasini kiriting!");
 
         let endTime = new Date().getTime() + (hours * 60 * 60 * 1000);
 
