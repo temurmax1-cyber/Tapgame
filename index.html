@@ -3,16 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CLOUD Coin WebApp</title>
+    <title>Cloud Coin WebApp</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <style>
         :root {
-            --bg-color: rgba(15, 23, 42, 0.85);
-            --card-bg: rgba(30, 41, 59, 0.9);
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.85);
             --accent-color: #38bdf8;
+            --gold-color: #fbbf24;
             --text-color: #f8fafc;
             --secondary-text: #94a3b8;
             --danger-color: #ef4444;
@@ -21,451 +22,92 @@
         body {
             margin: 0; padding: 0;
             background: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.85)), url('https://images.unsplash.com/photo-1534088568595-a066f410bcda?q=80&w=1000&auto=format&fit=crop');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            color: var(--text-color);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-size: cover; background-position: center; background-attachment: fixed;
+            color: var(--text-color); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex; flex-direction: column; align-items: center;
-            min-height: 100vh; padding-bottom: 70px;
+            min-height: 100vh; padding-bottom: 80px;
         }
         .container { width: 100%; max-width: 480px; padding: 16px; box-sizing: border-box; text-align: center; }
         .hidden { display: none !important; }
-        
-        /* Balance */
+
+        /* Top Header Balance */
+        .top-balance-card {
+            display: flex; justify-content: center; align-items: center; gap: 8px;
+            background: var(--card-bg); padding: 10px 20px; border-radius: 30px;
+            margin-bottom: 20px; backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1); width: fit-content; margin-left: auto; margin-right: auto;
+        }
+        .top-balance-card span { font-size: 20px; font-weight: bold; color: var(--gold-color); }
+
+        /* Balance & Tap */
         .balance-card {
-            background: var(--card-bg); border-radius: 16px; padding: 20px;
-            margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            backdrop-filter: blur(5px);
+            background: var(--card-bg); border-radius: 20px; padding: 20px;
+            margin-bottom: 20px; box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+            backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1);
         }
         .balance-title { font-size: 14px; color: var(--secondary-text); }
-        .balance-amount { font-size: 36px; font-weight: bold; color: var(--accent-color); margin-top: 5px; }
+        .balance-amount { font-size: 40px; font-weight: bold; color: var(--gold-color); margin-top: 5px; text-shadow: 0 2px 10px rgba(251, 191, 36, 0.3); }
 
-        /* Tap section */
         .tap-circle {
-            width: 180px; height: 180px; border-radius: 50%;
-            background: radial-gradient(circle, #38bdf8 0%, #0284c7 70%, #0369a1 100%);
-            margin: 30px auto; display: flex; align-items: center; justify-content: center;
-            font-size: 45px; font-weight: bold; color: #fff; cursor: pointer;
-            box-shadow: 0 10px 25px rgba(56, 189, 248, 0.4), inset 0 2px 5px rgba(255,255,255,0.4);
+            width: 190px; height: 190px; border-radius: 50%;
+            background: radial-gradient(circle, #fbbf24 0%, #d97706 70%, #b45309 100%);
+            margin: 25px auto; display: flex; align-items: center; justify-content: center;
+            font-size: 60px; font-weight: bold; color: #fff; cursor: pointer;
+            box-shadow: 0 10px 30px rgba(251, 191, 36, 0.4), inset 0 3px 6px rgba(255,255,255,0.5);
             user-select: none; transition: transform 0.08s ease, box-shadow 0.08s ease;
-            border: 4px solid rgba(255, 255, 255, 0.2);
+            border: 4px solid rgba(255, 255, 255, 0.3);
         }
         .tap-circle:active { 
             transform: scale(0.93); 
-            box-shadow: 0 5px 15px rgba(56, 189, 248, 0.3), inset 0 2px 3px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 15px rgba(251, 191, 36, 0.3), inset 0 2px 4px rgba(0,0,0,0.3);
         }
-        .energy-bar-container { background: var(--card-bg); border-radius: 8px; height: 12px; width: 100%; overflow: hidden; margin-top: 10px; }
-        .energy-bar { background: var(--accent-color); height: 100%; width: 100%; transition: width 0.3s; }
+        .energy-bar-container { background: var(--card-bg); border-radius: 10px; height: 14px; width: 100%; overflow: hidden; margin-top: 10px; border: 1px solid rgba(255,255,255,0.1); }
+        .energy-bar { background: linear-gradient(90deg, #38bdf8, #818cf8); height: 100%; width: 100%; transition: width 0.3s; }
 
-        /* Tabs content */
+        /* Sections */
         .section { display: none; width: 100%; }
         .section.active { display: block; }
 
-        /* Cards & Lists */
+        /* Auction Cards (Skrinshotdagi kabi) */
+        .auction-card {
+            background: var(--card-bg); border-radius: 16px; overflow: hidden;
+            margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4); text-align: left; cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .auction-card:hover { transform: translateY(-3px); }
+        .auction-img-container { position: relative; width: 100%; height: 160px; }
+        .auction-img-container img { width: 100%; height: 100%; object-fit: cover; }
+        .auction-badge {
+            position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.6);
+            padding: 4px 10px; border-radius: 20px; font-size: 12px; backdrop-filter: blur(5px);
+            display: flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,0.2);
+        }
+        .auction-info { padding: 14px; display: flex; justify-content: space-between; align-items: center; }
+        .auction-title { font-size: 16px; font-weight: bold; }
+        .auction-price { color: var(--gold-color); font-weight: bold; font-size: 15px; }
+        .auction-timer { font-size: 12px; color: var(--success-color); font-weight: bold; }
+
+        /* Detailed Auction Modal / Screen */
+        #auction-detail-view {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color); z-index: 2000; overflow-y: auto; padding: 20px; box-sizing: border-box;
+            display: none; text-align: left;
+        }
+        .back-btn { background: none; border: none; color: #fff; font-size: 16px; cursor: pointer; margin-bottom: 15px; display: flex; align-items: center; gap: 5px; }
+        
+        .leader-item {
+            background: rgba(30, 41, 59, 0.6); border-radius: 12px; padding: 12px; margin-bottom: 8px;
+            display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.05);
+        }
+        .leader-item.top-1 { background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(30, 41, 59, 0.8)); border: 1px solid var(--gold-color); }
+
+        /* General Cards & Buttons */
         .card {
-            background: var(--card-bg); border-radius: 12px; padding: 15px;
+            background: var(--card-bg); border-radius: 14px; padding: 16px;
             margin-bottom: 12px; text-align: left; display: flex;
             justify-content: space-between; align-items: center;
-            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px);
         }
-        .card img { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; margin-right: 10px; }
         .btn {
-            background: var(--accent-color); color: #000; border: none;
-            padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer;
-        }
-        .btn-danger { background: var(--danger-color); color: #fff; }
-
-        /* Navigation */
-        .nav-bar {
-            position: fixed; bottom: 0; left: 0; width: 100%;
-            background: rgba(30, 41, 59, 0.95); display: flex; justify-content: space-around;
-            padding: 10px 0; border-top: 1px solid #334155; box-sizing: border-box; z-index: 1000;
-            backdrop-filter: blur(10px);
-        }
-        .nav-item {
-            background: none; border: none; color: var(--secondary-text);
-            font-size: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px;
-        }
-        .nav-item.active { color: var(--accent-color); }
-
-        /* Inputs & Forms */
-        input, textarea {
-            width: 100%; padding: 10px; margin: 8px 0; border-radius: 8px;
-            border: 1px solid #334155; background: rgba(15, 23, 42, 0.9); color: var(--text-color); box-sizing: border-box;
-        }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <!-- HOME SECTION -->
-    <div id="home-section" class="section active">
-        <div class="balance-card">
-            <div class="balance-title">Sizning Balansingiz</div>
-            <div class="balance-amount" id="balance">0</div>
-        </div>
-        <div class="tap-circle" id="tap-btn">🪙</div>
-        <div style="display: flex; justify-content: space-between; font-size: 14px; color: var(--secondary-text);">
-            <span>Energiya:</span>
-            <span id="energy-text">500 / 500</span>
-        </div>
-        <div class="energy-bar-container">
-            <div class="energy-bar" id="energy-bar"></div>
-        </div>
-    </div>
-
-    <!-- EARN / TASKS SECTION -->
-    <div id="earn-section" class="section">
-        <h2>Vazifalar</h2>
-        <div id="tasks-list">Yuklanmoqda...</div>
-    </div>
-
-    <!-- AUCTION SECTION -->
-    <div id="auction-section" class="section">
-        <h2>Auksion</h2>
-        <div id="active-auction" class="card" style="flex-direction: column; align-items: flex-start;">
-            <p>Hozircha faol auksion yo'q.</p>
-        </div>
-        <div class="card" id="bid-box" style="flex-direction: column; align-items: flex-start;">
-            <h3>Stavka qilish</h3>
-            <p>Tikilgan stavkangiz: <span id="my-bid-display" style="color: var(--accent-color); font-weight: bold;">0</span> coin</p>
-            <input type="number" id="bid-amount-input" placeholder="Coin miqdorini kiriting">
-            <button class="btn" onclick="placeBid()">Stavka qo'yish</button>
-        </div>
-    </div>
-
-    <!-- BOOST SECTION -->
-    <div id="boost-section" class="section">
-        <h2>Boost & Reklama</h2>
-        <div class="card">
-            <div>
-                <h4>Reklama ko'rish</h4>
-                <p style="font-size: 12px; color: var(--secondary-text);">Reklama ko'rib +100 coin oling</p>
-            </div>
-            <button class="btn" onclick="watchAd()">Ko'rish</button>
-        </div>
-    </div>
-
-    <!-- PROFILE SECTION -->
-    <div id="profile-section" class="section">
-        <h2>Profil</h2>
-        <div class="balance-card" style="text-align: left;">
-            <p>👤 Foydalanuvchi: <span id="profile-name" style="color: var(--accent-color);">--</span></p>
-            <p>💰 Jami tangalar: <span id="profile-balance" style="color: var(--accent-color);">0</span></p>
-            <p>👥 Chaqirgan do'stlar: <span id="profile-ref-count">0</span> ta</p>
-            <p style="margin-top: 15px; font-size: 14px;">Sizning referal havolangiz:</p>
-            <input type="text" id="ref-link-input" readonly style="font-size: 12px;">
-            <button class="btn" onclick="copyRefLink()" style="width: 100%; margin-top: 5px;">Havolani nusxalash</button>
-        </div>
-    </div>
-
-    <!-- ADMIN SECTION -->
-    <div id="admin-section" class="section">
-        <h2>Admin Panel</h2>
-        <div class="card" style="flex-direction: column; align-items: flex-start;">
-            <h3>Yangi Vazifa Qo'shish</h3>
-            <input type="text" id="admin-task-title" placeholder="Vazifa nomi (Masalan: Kanalga obuna)">
-            <input type="text" id="admin-task-link" placeholder="Kanal / Havola linki">
-            <input type="number" id="admin-task-reward" placeholder="Coin miqdori (Masalan: 500)">
-            <button class="btn" onclick="adminAddTask()">Vazifa qo'shish</button>
-        </div>
-        <div id="admin-tasks-manage" style="width: 100%;"></div>
-
-        <div class="card" style="flex-direction: column; align-items: flex-start; margin-top: 20px;">
-            <h3>Auksion Sovg'a Qo'shish</h3>
-            <input type="text" id="admin-auction-title" placeholder="Sovg'a nomi">
-            <label style="font-size: 12px; color: var(--secondary-text); margin-top: 5px;">Sovg'a rasmini tanlang:</label>
-            <input type="file" id="admin-auction-img-file" accept="image/*">
-            <button class="btn" onclick="adminCreateAuction()" style="margin-top: 10px;">Auksionni boshlash</button>
-        </div>
-    </div>
-</div>
-
-<!-- NAVIGATION BAR -->
-<div class="nav-bar">
-    <button class="nav-item active" onclick="switchTab('home', this)">🏠 Asosiy</button>
-    <button class="nav-item" onclick="switchTab('earn', this)">📋 Vazifalar</button>
-    <button class="nav-item" onclick="switchTab('auction', this)">🔨 Auksion</button>
-    <button class="nav-item" onclick="switchTab('boost', this)">🚀 Boost</button>
-    <button class="nav-item" onclick="switchTab('profile', this)">👤 Profil</button>
-    <button id="nav-admin" class="nav-item hidden" onclick="switchTab('admin', this)">⚙️ Admin</button>
-</div>
-
-<script>
-    // --- TO'G'RI FIREBASE CONFIG (XATOSIZ ISHLAYDIGANI) ---
-    const firebaseConfig = {
-        apiKey: "AIzaSyD3f-HZK1wclA2fzM1Sg8S1LRluap9qg7k",
-        authDomain: "claude-coin.firebaseapp.com",
-        projectId: "claude-coin",
-        storageBucket: "claude-coin.firebasestorage.app",
-        messagingSenderId: "478948716667",
-        appId: "1:478948716667:web:d6ed5ddd8102e7bd0e72de",
-        measurementId: "G-84V124881S"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
-    const ADMIN_ID = "6680296518";
-    let tg = window.Telegram.WebApp;
-    tg.expand();
-
-    let user = tg.initDataUnsafe?.user;
-    let userId = user ? user.id.toString() : ADMIN_ID;
-    let userName = user ? user.first_name : "Admin";
-
-    let balance = 0;
-    let energy = 500;
-    let maxEnergy = 500;
-    let myBid = 0;
-    let completedTasks = [];
-    let referralsCount = 0;
-    let isAuctionActive = false;
-
-    // --- INIT USER DATA ---
-    const userRef = db.collection("users").doc(userId);
-    userRef.get().then((doc) => {
-        if (doc.exists) {
-            let data = doc.data();
-            balance = data.balance || 0;
-            energy = data.energy !== undefined ? data.energy : 500;
-            myBid = data.myBid || 0;
-            completedTasks = data.completedTasks || [];
-            referralsCount = data.referralsCount || 0;
-        } else {
-            userRef.set({
-                balance: 0,
-                energy: 500,
-                myBid: 0,
-                completedTasks: [],
-                referralsCount: 0,
-                name: userName
-            });
-        }
-        updateUI();
-        loadTasks();
-        loadAuction();
-    }).catch((error) => {
-        console.error("Bazadan o'qishda xatolik: ", error);
-    });
-
-    // Bazaga ma'lumot saqlash
-    function saveData() {
-        userRef.set({
-            balance: balance,
-            energy: energy,
-            myBid: myBid,
-            completedTasks: completedTasks,
-            referralsCount: referralsCount,
-            name: userName
-        }, { merge: true }).catch((error) => {
-            console.error("Saqlashda xatolik: ", error);
-        });
-    }
-
-    function updateUI() {
-        document.getElementById("balance").innerText = balance;
-        document.getElementById("profile-balance").innerText = balance;
-        document.getElementById("profile-name").innerText = userName;
-        document.getElementById("energy-text").innerText = `${energy} / ${maxEnergy}`;
-        document.getElementById("energy-bar").style.width = (energy / maxEnergy) * 100 + "%";
-        document.getElementById("my-bid-display").innerText = myBid;
-        document.getElementById("profile-ref-count").innerText = referralsCount;
-        
-        let botUsername = "Cloudcointapbot";
-        let refLink = `https://t.me/${botUsername}?start=ref_${userId}`;
-        document.getElementById("ref-link-input").value = refLink;
-
-        if (userId === ADMIN_ID) {
-            document.getElementById("nav-admin").classList.remove("hidden");
-        } else {
-            document.getElementById("nav-admin").classList.add("hidden");
-        }
-    }
-
-    // --- NAVIGATION ---
-    function switchTab(tabName, el) {
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        document.getElementById(`${tabName}-section`).classList.add('active');
-        el.classList.add('active');
-    }
-
-    // --- TAP LOGIC ---
-    document.getElementById("tap-btn").addEventListener("click", () => {
-        if (energy > 0) {
-            balance += 1;
-            energy -= 1;
-            saveData(); 
-            updateUI();
-        }
-    });
-
-    // Energiya tiklanishi
-    setInterval(() => {
-        if (energy < maxEnergy) {
-            energy += 1;
-            saveData();
-            updateUI();
-        }
-    }, 5000);
-
-    // --- TASKS / EARN ---
-    function loadTasks() {
-        db.collection("tasks").get().then((querySnapshot) => {
-            let html = "";
-            let adminHtml = "";
-            querySnapshot.forEach((doc) => {
-                let task = doc.data();
-                let taskId = doc.id;
-                let isDone = completedTasks.includes(taskId);
-                let reward = task.reward || 500;
-
-                html += `<div class="card">
-                    <div>
-                        <h4>${task.title}</h4>
-                        <p style="font-size: 12px; color: var(--secondary-text);">+${reward} Coin</p>
-                    </div>
-                    <button class="btn" ${isDone ? "disabled style='background: #64748b;'" : `onclick="completeTask('${taskId}',${reward})"`}>
-                        ${isDone ? "Bajarilgan" : "Bajarish"}
-                    </button>
-                </div>`;
-
-                adminHtml += `<div class="card">
-                    <span>${task.title} (+${reward})</span>
-                    <button class="btn btn-danger" onclick="adminDeleteTask('${taskId}')">O'chirish</button>
-                </div>`;
-            });
-            document.getElementById("tasks-list").innerHTML = html || "<p>Hozircha vazifalar yo'q.</p>";
-            document.getElementById("admin-tasks-manage").innerHTML = adminHtml || "<p style='font-size:12px; color:var(--secondary-text);'>Vazifalar yo'q</p>";
-        });
-    }
-
-    function completeTask(taskId, reward) {
-        if (completedTasks.includes(taskId)) return;
-        completedTasks.push(taskId);
-        balance += reward;
-        saveData();
-        updateUI();
-        loadTasks();
-        alert(`Tabriklaymiz! ${reward} ta coin qo'shildi.`);
-    }
-
-    // --- AUCTION ---
-    function placeBid() {
-        if (!isAuctionActive) {
-            alert("Hozircha faol auksion mavjud emas!");
-            return;
-        }
-        let amount = parseInt(document.getElementById("bid-amount-input").value);
-        if (isNaN(amount) || amount <= 0) {
-            alert("To'g'ri miqdor kiriting!");
-            return;
-        }
-        if (balance < amount) {
-            alert("Hisobingizda yetarli coin yo'q!");
-            return;
-        }
-        balance -= amount;
-        myBid += amount;
-        saveData();
-        updateUI();
-        document.getElementById("bid-amount-input").value = "";
-        alert("Stavka muvaffaqiyatli qabul qilindi!");
-    }
-
-    function loadAuction() {
-        db.collection("auction").doc("active").get().then((doc) => {
-            if (doc.exists) {
-                let data = doc.data();
-                isAuctionActive = true;
-                document.getElementById("active-auction").innerHTML = `
-                    <img src="${data.img}" style="width:100%; height:150px; border-radius:8px; object-fit:cover; margin-bottom:10px;">
-                    <h3>${data.title}</h3>
-                `;
-            } else {
-                isAuctionActive = false;
-                document.getElementById("active-auction").innerHTML = `<p>Hozircha faol auksion yo'q.</p>`;
-            }
-        });
-    }
-
-    // --- BOOST / ADS ---
-    function watchAd() {
-        let btn = event.target;
-        btn.disabled = true;
-        let count = 5;
-        btn.innerText = `Reklama: ${count}s`;
-
-        let timer = setInterval(() => {
-            count--;
-            if (count > 0) {
-                btn.innerText = `Reklama: ${count}s`;
-            } else {
-                clearInterval(timer);
-                balance += 100;
-                saveData();
-                updateUI();
-                btn.disabled = false;
-                btn.innerText = "Ko'rish";
-                alert("Tabriklaymiz! Reklama ko'rildi va +100 coin qo'shildi.");
-            }
-        }, 1000);
-    }
-
-    // --- PROFILE / REF ---
-    function copyRefLink() {
-        let input = document.getElementById("ref-link-input");
-        input.select();
-        document.execCommand("copy");
-        alert("Referal havola nusxalandi!");
-    }
-
-    // --- ADMIN ACTIONS ---
-    function adminAddTask() {
-        let title = document.getElementById("admin-task-title").value;
-        let link = document.getElementById("admin-task-link").value;
-        let reward = parseInt(document.getElementById("admin-task-reward").value);
-        if (!title || isNaN(reward)) return alert("Sarlavha va coin miqdorini to'g'ri kiriting!");
-        
-        db.collection("tasks").add({ title, link, reward }).then(() => {
-            alert("Vazifa qo'shildi!");
-            document.getElementById("admin-task-title").value = "";
-            document.getElementById("admin-task-link").value = "";
-            document.getElementById("admin-task-reward").value = "";
-            loadTasks();
-        }).catch((error) => {
-            alert("Xatolik yuz berdi: " + error.message);
-        });
-    }
-
-    function adminDeleteTask(taskId) {
-        db.collection("tasks").doc(taskId).delete().then(() => {
-            alert("Vazifa o'chirildi!");
-            loadTasks();
-        });
-    }
-
-    function adminCreateAuction() {
-        let title = document.getElementById("admin-auction-title").value;
-        let fileInput = document.getElementById("admin-auction-img-file");
-        if (!title || fileInput.files.length === 0) return alert("Sarlavha va rasm tanlang!");
-
-        let reader = new FileReader();
-        reader.onload = function(e) {
-            let base64Img = e.target.result;
-            db.collection("auction").doc("active").set({
-                title: title,
-                img: base64Img
-            }).then(() => {
-                alert("Auksionga sovg'a joylandi!");
-                loadAuction();
-            }).catch((error) => {
-                alert("Xatolik yuz berdi: " + error.message);
-            });
-        };
-        reader.readAsDataURL(fileInput.files[0]);
-    }
-</script>
-</body>
-</html>
+            background: linear-gradient(135deg, #38bdf8, #0284c7); color: #
