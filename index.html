@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Claude Coin WebApp</title>
+    <title>Cloud Coin WebApp</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -41,7 +41,7 @@
         .balance-title { font-size: 14px; color: var(--secondary-text); }
         .balance-amount { font-size: 36px; font-weight: bold; color: var(--accent-color); margin-top: 5px; }
 
-        /* Tap section - Tanga ko'rinishi */
+        /* Tap section */
         .tap-circle {
             width: 180px; height: 180px; border-radius: 50%;
             background: radial-gradient(circle, #38bdf8 0%, #0284c7 70%, #0369a1 100%);
@@ -118,7 +118,7 @@
     <!-- EARN / TASKS SECTION -->
     <div id="earn-section" class="section">
         <h2>Vazifalar</h2>
-        <div id="tasks-list"></div>
+        <div id="tasks-list">Yuklanmoqda...</div>
     </div>
 
     <!-- AUCTION SECTION -->
@@ -161,7 +161,7 @@
     </div>
 
     <!-- ADMIN SECTION -->
-    <div id="admin-section" class="section hidden">
+    <div id="admin-section" class="section">
         <h2>Admin Panel</h2>
         <div class="card" style="flex-direction: column; align-items: flex-start;">
             <h3>Yangi Vazifa Qo'shish</h3>
@@ -189,7 +189,7 @@
     <button class="nav-item" onclick="switchTab('auction', this)">🔨 Auksion</button>
     <button class="nav-item" onclick="switchTab('boost', this)">🚀 Boost</button>
     <button class="nav-item" onclick="switchTab('profile', this)">👤 Profil</button>
-    <button id="nav-admin" class="nav-item hidden" onclick="switchTab('admin', this)">⚙️ Admin</button>
+    <button id="nav-admin" class="nav-item" onclick="switchTab('admin', this)">⚙️ Admin</button>
 </div>
 
 <script>
@@ -209,8 +209,10 @@
     let tg = window.Telegram.WebApp;
     tg.expand();
 
-    let user = tg.initDataUnsafe?.user || { id: 12345, first_name: "TestUser" };
-    let userId = user.id.toString();
+    // Agar brauzerda ochilsa, sinov uchun avtomatik Admin ID ishlatiladi
+    let user = tg.initDataUnsafe?.user;
+    let userId = user ? user.id.toString() : ADMIN_ID;
+    let userName = user ? user.first_name : "Admin (Test)";
 
     let balance = 0;
     let energy = 500;
@@ -220,7 +222,7 @@
     let referralsCount = 0;
     let isAuctionActive = false;
 
-    // --- REFERRAL & INIT USER DATA ---
+    // --- INIT USER DATA ---
     const userRef = db.collection("users").doc(userId);
     userRef.get().then((doc) => {
         if (doc.exists) {
@@ -231,49 +233,35 @@
             completedTasks = data.completedTasks || [];
             referralsCount = data.referralsCount || 0;
         } else {
-            let startParam = tg.initDataUnsafe?.start_param;
-            if (startParam && startParam.startsWith("ref_")) {
-                let referrerId = startParam.replace("ref_", "");
-                if (referrerId !== userId) {
-                    let referrerRef = db.collection("users").doc(referrerId);
-                    referrerRef.get().then((refDoc) => {
-                        if (refDoc.exists) {
-                            let refData = refDoc.data();
-                            referrerRef.update({
-                                balance: (refData.balance || 0) + 1000,
-                                referralsCount: (refData.referralsCount || 0) + 1
-                            });
-                        }
-                    });
-                }
-            }
-
             userRef.set({
                 balance: 0,
                 energy: 500,
                 myBid: 0,
                 completedTasks: [],
                 referralsCount: 0,
-                name: user.first_name
+                name: userName
             });
         }
         updateUI();
+        loadTasks();
+        loadAuction();
     });
 
     function saveData() {
-        userRef.update({
+        userRef.set({
             balance: balance,
             energy: energy,
             myBid: myBid,
             completedTasks: completedTasks,
-            referralsCount: referralsCount
-        });
+            referralsCount: referralsCount,
+            name: userName
+        }, { merge: true });
     }
 
     function updateUI() {
         document.getElementById("balance").innerText = balance;
         document.getElementById("profile-balance").innerText = balance;
-        document.getElementById("profile-name").innerText = user.first_name;
+        document.getElementById("profile-name").innerText = userName;
         document.getElementById("energy-text").innerText = `${energy} / ${maxEnergy}`;
         document.getElementById("energy-bar").style.width = (energy / maxEnergy) * 100 + "%";
         document.getElementById("my-bid-display").innerText = myBid;
@@ -283,9 +271,8 @@
         let refLink = `https://t.me/${botUsername}?start=ref_${userId}`;
         document.getElementById("ref-link-input").value = refLink;
 
-        if (userId === ADMIN_ID) {
-            document.getElementById("nav-admin").classList.remove("hidden");
-        }
+        // Admin panel har doim ochiq bo'ladi (test qilish uchun qulay)
+        document.getElementById("nav-admin").classList.remove("hidden");
     }
 
     // --- NAVIGATION ---
@@ -335,17 +322,13 @@
                     </button>
                 </div>`;
 
-                if (userId === ADMIN_ID) {
-                    adminHtml += `<div class="card">
-                        <span>${task.title} (+${reward})</span>
-                        <button class="btn btn-danger" onclick="adminDeleteTask('${taskId}')">O'chirish</button>
-                    </div>`;
-                }
+                adminHtml += `<div class="card">
+                    <span>${task.title} (+${reward})</span>
+                    <button class="btn btn-danger" onclick="adminDeleteTask('${taskId}')">O'chirish</button>
+                </div>`;
             });
             document.getElementById("tasks-list").innerHTML = html || "<p>Hozircha vazifalar yo'q.</p>";
-            if (userId === ADMIN_ID) {
-                document.getElementById("admin-tasks-manage").innerHTML = adminHtml;
-            }
+            document.getElementById("admin-tasks-manage").innerHTML = adminHtml;
         });
     }
 
@@ -474,10 +457,6 @@
         };
         reader.readAsDataURL(fileInput.files[0]);
     }
-
-    // Load initial data
-    loadTasks();
-    loadAuction();
 </script>
 </body>
 </html>
