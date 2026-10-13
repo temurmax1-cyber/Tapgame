@@ -76,7 +76,7 @@
             transition: transform 0.2s;
         }
         .auction-card:hover { transform: translateY(-3px); }
-        .auction-img-container { position: relative; width: 100%; height: 160px; }
+        .auction-img-container { position: relative; width: 100%; height: 160px; background: #1e293b; }
         .auction-img-container img { width: 100%; height: 100%; object-fit: cover; }
         .auction-badge {
             position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.6);
@@ -203,14 +203,14 @@
         <div class="card" style="flex-direction: column; align-items: flex-start;">
             <h3>Yangi Vazifa Qo'shish</h3>
             <input type="text" id="admin-task-title" placeholder="Vazifa nomi (Masalan: Kanalga obuna)">
-            <input type="text" id="admin-task-link" placeholder="Kanal / Havola linki">
+            <input type="text" id="admin-task-link" placeholder="Kanal / Havola linki (https://t.me/...)">
             <input type="number" id="admin-task-reward" placeholder="Coin miqdori (Masalan: 500)">
             <button class="btn" onclick="adminAddTask()">Vazifa qo'shish</button>
         </div>
         <div id="admin-tasks-manage" style="width: 100%;"></div>
 
         <div class="card" style="flex-direction: column; align-items: flex-start; margin-top: 20px;">
-            <h3>Auksionga Sovg'a Qo'shish (URL orqali)</h3>
+            <h3>Auksionga Sovg'a Qo'shish</h3>
             <input type="text" id="admin-auction-title" placeholder="Sovg'a nomi (Masalan: Telegram Premium)">
             <input type="text" id="admin-auction-img-url" placeholder="Rasm havolasi (URL linki)">
             <input type="number" id="admin-auction-hours" placeholder="Tugash vaqti (Necha soatdan keyin tugasin?)">
@@ -258,6 +258,10 @@
     let userId = user ? user.id.toString() : ADMIN_ID;
     let userName = user ? user.first_name : "Admin";
 
+    // URL orqali kelgan referal ID'ni aniqlash (start_param orqali)
+    let startParam = tg.initDataUnsafe?.start_param;
+    let referrerId = startParam && startParam.startsWith("ref_") ? startParam.replace("ref_", "") : null;
+
     let balance = 0;
     let energy = 500;
     let maxEnergy = 500;
@@ -277,19 +281,18 @@
             completedTasks = data.completedTasks || [];
             referralsCount = data.referralsCount || 0;
 
-            // 24 soatlik energiya tiklanishini hisoblash
             let elapsed = now - lastEnergyTime;
             let dayMs = 24 * 60 * 60 * 1000;
             if (elapsed >= dayMs) {
                 energy = maxEnergy;
                 lastEnergyTime = now;
             } else {
-                // 24 soat davomida o'tgan vaqtga qarab energiyani qo'shish
                 let restored = Math.floor((elapsed / dayMs) * maxEnergy);
                 energy = Math.min(maxEnergy, energy + restored);
                 if (restored > 0) lastEnergyTime = now;
             }
         } else {
+            // Yangi foydalanuvchi
             userRef.set({
                 balance: 0,
                 energy: 500,
@@ -298,6 +301,22 @@
                 referralsCount: 0,
                 name: userName
             });
+
+            // Agar uni kimdir taklif qilgan bo'lsa va u o'zi o'zini taklif qilmagan bo'lsa
+            if (referrerId && referrerId !== userId) {
+                let referrerRef = db.collection("users").doc(referrerId);
+                referrerRef.get().then((refDoc) => {
+                    if (refDoc.exists) {
+                        let refData = refDoc.data();
+                        let newCount = (refData.referralsCount || 0) + 1;
+                        let newBal = (refData.balance || 0) + 1000; // Referal uchun bonus coin (+1000)
+                        referrerRef.update({
+                            referralsCount: newCount,
+                            balance: newBal
+                        });
+                    }
+                });
+            }
         }
         updateUI();
         loadTasks();
@@ -352,7 +371,6 @@
         }
     });
 
-    // Har 10 sekundda energiyani 24 soatlik limitga qarab yangilab borish
     setInterval(() => {
         let now = new Date().getTime();
         let dayMs = 24 * 60 * 60 * 1000;
@@ -367,7 +385,7 @@
         }
     }, 10000);
 
-    // --- TASKS ---
+    // --- TASKS WITH VERIFICATION ---
     function loadTasks() {
         db.collection("tasks").get().then((querySnapshot) => {
             if (querySnapshot.empty) {
@@ -386,15 +404,22 @@
                 let taskId = doc.id;
                 let isDone = completedTasks.includes(taskId);
                 let reward = task.reward || 500;
+                let taskLink = task.link || "https://t.me/";
 
                 html += `<div class="card">
                     <div>
                         <h4>${task.title}</h4>
                         <p style="font-size: 12px; color: var(--secondary-text);">+${reward} Coin</p>
                     </div>
-                    <button class="btn" style="width: auto;" ${isDone ? "disabled style='background: #64748b; color:#fff;'" : `onclick="completeTask('${taskId}',${reward})"`}>
-                        ${isDone ? "Bajarilgan" : "Bajarish"}
-                    </button>
+                    <div>
+                        ${isDone ? 
+                            `<button class="btn" disabled style="background: #64748b; color:#fff; width:auto;">Bajarilgan</button>` : 
+                            `<div style="display:flex; gap:6px;">
+                                <a href="${taskLink}" target="_blank" class="btn" style="text-decoration:none; padding:10px 12px; font-size:12px;" onclick="markVisited('${taskId}')">Obuna</a>
+                                <button class="btn" style="padding:10px 12px; font-size:12px; background:var(--success-color); color:#fff;" onclick="verifyTask('${taskId}',${reward})">Tekshirish</button>
+                             </div>`
+                        }
+                    </div>
                 </div>`;
 
                 adminHtml += `<div class="card">
@@ -407,14 +432,30 @@
         });
     }
 
-    function completeTask(taskId, reward) {
-        if (completedTasks.includes(taskId)) return;
-        completedTasks.push(taskId);
-        balance += reward;
-        saveData();
-        updateUI();
-        loadTasks();
-        alert(`Tabriklaymiz! ${reward} ta coin qo'shildi.`);
+    let visitedTasks = [];
+    function markVisited(taskId) {
+        if (!visitedTasks.includes(taskId)) visitedTasks.push(taskId);
+    }
+
+    function verifyTask(taskId, reward) {
+        if (!visitedTasks.includes(taskId)) {
+            alert("Iltimos, avval kanalga o'tib obuna bo'ling!");
+            return;
+        }
+        
+        let btn = event.target;
+        btn.innerText = "Tekshirilmoqda...";
+        btn.disabled = true;
+
+        setTimeout(() => {
+            if (completedTasks.includes(taskId)) return;
+            completedTasks.push(taskId);
+            balance += reward;
+            saveData();
+            updateUI();
+            loadTasks();
+            alert(`Tabriklaymiz! Vazifa bajarildi va +${reward} coin qo'shildi.`);
+        }, 1500);
     }
 
     // --- AUCTION SYSTEM ---
@@ -444,10 +485,12 @@
                 let hours = Math.max(0, Math.floor(timeLeft / (1000 * 60 * 60)));
                 let minutes = Math.max(0, Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60)));
 
+                let imgSrc = item.img || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop";
+
                 html += `<div class="auction-card" onclick="openAuctionDetail('${auctionId}')">
                     <div class="auction-img-container">
                         <div class="auction-badge">❤️ ${item.likes || 45}</div>
-                        <img src="${item.img}" alt="Auction">
+                        <img src="${imgSrc}" alt="Auction" onerror="this.src='https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop'">
                     </div>
                     <div class="auction-info">
                         <div>
@@ -476,6 +519,7 @@
         db.collection("auctions").doc(auctionId).get().then((doc) => {
             if (!doc.exists) return;
             let item = doc.data();
+            let imgSrc = item.img || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop";
 
             db.collection("auctions").doc(auctionId).collection("bids").orderBy("amount", "desc").limit(5).get().then((bidsSnapshot) => {
                 let leadersHtml = "";
@@ -497,7 +541,7 @@
 
                 document.getElementById("auction-detail-content").innerHTML = `
                     <div style="text-align: center;">
-                        <img src="${item.img}" style="width: 100%; max-height: 220px; border-radius: 16px; object-fit: cover; margin-bottom: 15px;">
+                        <img src="${imgSrc}" style="width: 100%; max-height: 220px; border-radius: 16px; object-fit: cover; margin-bottom: 15px;" onerror="this.src='https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop'">
                         <h2>${item.title}</h2>
                         <p style="color: var(--secondary-text); font-size: 13px;">Eng ko'p coin taklif qilgan foydalanuvchi yutadi.</p>
                     </div>
@@ -583,7 +627,7 @@
         let title = document.getElementById("admin-task-title").value;
         let link = document.getElementById("admin-task-link").value;
         let reward = parseInt(document.getElementById("admin-task-reward").value);
-        if (!title || isNaN(reward)) return alert("Ma'lumotlarni to'liq kiriting!");
+        if (!title || !link || isNaN(reward)) return alert("Ma'lumotlarni to'liq kiriting!");
         
         db.collection("tasks").add({ title, link, reward }).then(() => {
             alert("Vazifa qo'shildi!");
@@ -603,7 +647,7 @@
         let imgUrl = document.getElementById("admin-auction-img-url").value;
         let hours = parseInt(document.getElementById("admin-auction-hours").value) || 24;
         
-        if (!title || !imgUrl) return alert("Sarlavha va rasm havolasini (URL) kiriting!");
+        if (!title || !imgUrl) return alert("Sarlavha va rasm havolasini kiriting!");
 
         let endTime = new Date().getTime() + (hours * 60 * 60 * 1000);
 
