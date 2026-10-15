@@ -89,28 +89,29 @@
         
         <!-- CLICKER TAB -->
         <div id="tab-clicker" class="tab-pane flex flex-col items-center justify-center w-full h-full">
-            <div class="glass-card px-4 py-2 rounded-xl mb-4 flex items-center gap-2 border border-emerald-500/20">
-                <span class="text-xs text-gray-400">Soatlik daromad:</span>
-                <span class="text-xs font-bold text-emerald-400" id="profit-per-hour">+0 CLOUD/soat</span>
+            <div class="glass-card px-4 py-2 rounded-xl mb-3 flex items-center gap-2 border border-emerald-500/20">
+                <span class="text-xs text-gray-400">24 soatda yig'ildi:</span>
+                <span class="text-xs font-bold text-emerald-400" id="daily-earned">0 CLOUD</span>
             </div>
 
             <div class="text-center mb-4">
-                <div class="text-5xl font-extrabold tracking-tight text-white flex items-center justify-center gap-2">
-                    <img src="logo1.jpg" class="w-10 h-10 rounded-full object-cover border border-emerald-500/30" alt="Icon">
+                <div class="text-xs text-gray-400 uppercase tracking-wider mb-1">JAMI TANGALAR</div>
+                <div class="text-4xl font-extrabold tracking-tight text-white flex items-center justify-center gap-2">
+                    <img src="logo1.jpg" class="w-8 h-8 rounded-full object-cover border border-emerald-500/30" alt="Icon">
                     <span id="clicker-balance">0</span>
                 </div>
             </div>
 
-            <div class="relative flex items-center justify-center my-2" id="click-container" style="width: 260px; height: 260px;">
+            <div class="relative flex items-center justify-center my-2" id="click-container" style="width: 240px; height: 240px;">
                 <div class="absolute w-full h-full rounded-full bg-emerald-500/10 blur-xl animate-pulse"></div>
-                <button id="tap-btn" class="coin-btn relative w-64 h-64 rounded-full p-2 glass flex items-center justify-center shadow-2xl border-2 border-emerald-500/30 focus:outline-none">
+                <button id="tap-btn" class="coin-btn relative w-56 h-56 rounded-full p-2 glass flex items-center justify-center shadow-2xl border-2 border-emerald-500/30 focus:outline-none">
                     <div class="w-full h-full rounded-full overflow-hidden shadow-inner flex items-center justify-center bg-slate-900">
                         <img src="logo1.jpg" alt="CLOUD Coin" class="w-full h-full object-cover pointer-events-none">
                     </div>
                 </button>
             </div>
 
-            <div class="w-full max-w-xs mt-6">
+            <div class="w-full max-w-xs mt-4">
                 <div class="flex justify-between text-xs text-gray-300 mb-2 font-medium">
                     <span class="flex items-center gap-1">⚡ Energiya</span>
                     <span><span id="energy">500</span> / <span id="max-energy">500</span></span>
@@ -197,7 +198,8 @@
                     <h3 class="font-semibold text-sm">Yangi Vazifa Qo'shish</h3>
                     <input type="text" id="admin-task-title" placeholder="Vazifa nomi (Masalan: Kanalga obuna)" class="w-full p-2 rounded-xl bg-slate-900 border border-white/10 text-xs">
                     <input type="text" id="admin-task-link" placeholder="Kanal havolasi (https://t.me/...)" class="w-full p-2 rounded-xl bg-slate-900 border border-white/10 text-xs">
-                    <button onclick="adminAddTask()" class="w-full py-2 bg-emerald-500 text-slate-950 font-bold rounded-xl text-xs">Vazifa qo'shish (+500)</button>
+                    <input type="number" id="admin-task-reward" placeholder="Mukofot miqdori (Masalan: 500)" class="w-full p-2 rounded-xl bg-slate-900 border border-white/10 text-xs">
+                    <button onclick="adminAddTask()" class="w-full py-2 bg-emerald-500 text-slate-950 font-bold rounded-xl text-xs">Vazifa qo'shish</button>
                 </div>
                 <div id="admin-tasks-manage" class="space-y-2"></div>
 
@@ -274,7 +276,6 @@
         let userId = user ? user.id.toString() : ADMIN_ID;
         let userName = user ? user.first_name : "Admin";
 
-        // ID raqamlarini harflarga o'tkazuvchi funksiya (Masalan: 6680296518 -> "gghabajbgb")
         function encodeUserId(idStr) {
             const chars = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'];
             return idStr.split('').map(char => {
@@ -283,7 +284,6 @@
             }).join('');
         }
 
-        // Harfli kodni qaytadan raqamli IDga o'tkazuvchi funksiya
         function decodeUserId(encodedStr) {
             const chars = {'a': '0', 'b': '1', 'c': '2', 'd': '3', 'e': '4', 'f': '5', 'g': '6', 'h': '7', 'i': '8', 'j': '9'};
             return encodedStr.split('').map(char => chars[char] !== undefined ? chars[char] : char).join('');
@@ -304,6 +304,7 @@
         let tapPower = parseInt(localStorage.getItem('cloud_tapPower')) || 1;
         let lastFullEnergyTime = parseInt(localStorage.getItem('cloud_lastFullTime')) || new Date().getTime();
         let completedTasks = JSON.parse(localStorage.getItem('cloud_tasks')) || [];
+        let dailyEarned = parseInt(localStorage.getItem('cloud_daily_earned')) || 0;
         let referrals = [];
         let invitedByName = "Hech kim";
 
@@ -326,6 +327,7 @@
                 maxEnergy = data.maxEnergy || maxEnergy;
                 tapPower = data.tapPower || tapPower;
                 completedTasks = data.completedTasks || completedTasks;
+                dailyEarned = data.dailyEarned !== undefined ? data.dailyEarned : dailyEarned;
                 referrals = data.referrals || [];
                 if (data.invitedBy) invitedByName = data.invitedBy;
             } else {
@@ -336,6 +338,7 @@
                     tapPower: tapPower,
                     lastFullEnergyTime: lastFullEnergyTime,
                     completedTasks: completedTasks,
+                    dailyEarned: dailyEarned,
                     referrals: referrals,
                     name: userName,
                     invitedBy: "Hech kim"
@@ -381,6 +384,7 @@
             localStorage.setItem('cloud_tapPower', tapPower);
             localStorage.setItem('cloud_lastFullTime', lastFullEnergyTime);
             localStorage.setItem('cloud_tasks', JSON.stringify(completedTasks));
+            localStorage.setItem('cloud_daily_earned', dailyEarned);
         }
 
         function saveData() {
@@ -392,6 +396,7 @@
                 tapPower: tapPower,
                 lastFullEnergyTime: lastFullEnergyTime,
                 completedTasks: completedTasks,
+                dailyEarned: dailyEarned,
                 referrals: referrals,
                 name: userName,
                 invitedBy: invitedByName
@@ -407,14 +412,14 @@
             document.getElementById("energy").innerText = Math.floor(energy);
             document.getElementById("max-energy").innerText = maxEnergy;
             document.getElementById("energy-bar").style.width = (energy / maxEnergy) * 100 + "%";
+            document.getElementById("daily-earned").innerText = dailyEarned.toLocaleString() + " CLOUD";
             document.getElementById("profile-ref-count").innerText = referrals.length;
 
             let refsHtml = referrals.length > 0 ? referrals.map(r => `<div>👤 ${r.name} (+500 CLOUD)</div>`).join('') : "Hozircha do'stlar yo'q.";
             document.getElementById("referrals-list").innerHTML = refsHtml;
 
             let botUsername = "Cloudcointapbot";
-            // RAQAMLAR O'RNIGA HARFLI KOD BILAN REFERAL HAVOLA (TO'G'RIDAN-TO'G'RI OCHILISHI UCHUN):
-            document.getElementById("ref-link-input").value = `https://t.me/${botUsername}?startapp=ref_${encodedUserId}`;
+            document.getElementById("ref-link-input").value = `https://t.me/${botUsername}/app?startapp=ref_${encodedUserId}`;
 
             if (userId === ADMIN_ID) {
                 document.getElementById("nav-admin").classList.remove("hidden");
@@ -438,6 +443,7 @@
         tapBtn.addEventListener("pointerdown", (e) => {
             if (energy >= tapPower) {
                 balance += tapPower;
+                dailyEarned += tapPower;
                 energy -= tapPower;
                 saveData();
                 updateUI();
@@ -503,6 +509,7 @@
                 } else {
                     clearInterval(timer);
                     balance += 60;
+                    dailyEarned += 60;
                     saveData();
                     updateUI();
                     btn.disabled = false;
@@ -577,6 +584,7 @@
             if (completedTasks.includes(taskId)) return;
             completedTasks.push(taskId);
             balance += reward;
+            dailyEarned += reward;
             saveData();
             updateUI();
             loadTasks();
@@ -595,7 +603,7 @@
                         img: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop",
                         endTime: new Date().getTime() + (12 * 60 * 60 * 1000),
                         topBid: 14200,
-                        likes: 71
+                        likes: 0
                     }).then(() => loadAuctions());
                     return;
                 }
@@ -607,11 +615,12 @@
                     let hours = Math.max(0, Math.floor(timeLeft / (1000 * 60 * 60)));
                     let minutes = Math.max(0, Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60)));
                     let imgSrc = item.img || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop";
+                    let likesCount = item.likes !== undefined ? item.likes : 0;
 
                     html += `<div onclick="openAuctionDetail('${auctionId}')" class="glass-card rounded-2xl overflow-hidden cursor-pointer border border-white/10 hover:border-emerald-500/50 transition">
                         <div class="relative w-full h-36 bg-slate-900">
                             <img src="${imgSrc}" class="w-full h-full object-cover">
-                            <span class="absolute top-2 left-2 bg-slate-950/80 px-2 py-1 rounded-full text-[10px] border border-white/10">❤️ ${item.likes || 45}</span>
+                            <span class="absolute top-2 left-2 bg-slate-950/80 px-2 py-1 rounded-full text-[10px] border border-white/10">❤️ ${likesCount}</span>
                         </div>
                         <div class="p-3 flex justify-between items-center">
                             <div>
@@ -710,11 +719,13 @@
         function adminAddTask() {
             let title = document.getElementById("admin-task-title").value;
             let link = document.getElementById("admin-task-link").value;
-            if (!title || !link) return alert("Ma'lumotlarni to'liq kiriting!");
-            db.collection("tasks").add({ title, link, reward: 500 }).then(() => {
+            let reward = parseInt(document.getElementById("admin-task-reward").value);
+            if (!title || !link || isNaN(reward) || reward <= 0) return alert("Barcha ma'lumotlarni va mukofot miqdorini to'g'ri kiriting!");
+            db.collection("tasks").add({ title, link, reward }).then(() => {
                 alert("Vazifa qo'shildi!");
                 document.getElementById("admin-task-title").value = "";
                 document.getElementById("admin-task-link").value = "";
+                document.getElementById("admin-task-reward").value = "";
                 loadTasks();
             });
         }
@@ -729,7 +740,7 @@
             let hours = parseInt(document.getElementById("admin-auction-hours").value) || 24;
             if (!title || !img) return alert("Sarlavha va rasm havolasini kiriting!");
             let endTime = new Date().getTime() + (hours * 60 * 60 * 1000);
-            db.collection("auctions").add({ title, img, endTime, topBid: 0, likes: Math.floor(Math.random() * 50) + 10 }).then(() => {
+            db.collection("auctions").add({ title, img, endTime, topBid: 0, likes: 0 }).then(() => {
                 alert("Auksion boshlandi!");
                 document.getElementById("admin-auction-title").value = "";
                 document.getElementById("admin-auction-img-url").value = "";
