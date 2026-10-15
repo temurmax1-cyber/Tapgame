@@ -392,8 +392,8 @@
             document.getElementById("referrals-list").innerHTML = refsHtml;
 
             let botUsername = "Cloudcointapbot";
-            // TO'G'RI FORMAT: /app?startapp=
-            document.getElementById("ref-link-input").value = `https://t.me/${botUsername}/app?startapp=ref_${userId}`;
+            // TO'G'RIDAN-TO'G'RI MINI APP OCHUVCHI FORMAT (ASOSIY O'ZGARISH):
+            document.getElementById("ref-link-input").value = `https://t.me/${botUsername}?startapp=ref_${userId}`;
 
             if (userId === ADMIN_ID) {
                 document.getElementById("nav-admin").classList.remove("hidden");
