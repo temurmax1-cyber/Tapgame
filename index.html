@@ -274,8 +274,29 @@
         let userId = user ? user.id.toString() : ADMIN_ID;
         let userName = user ? user.first_name : "Admin";
 
+        // ID raqamlarini harflarga o'tkazuvchi funksiya (Masalan: 6680296518 -> "gghabajbgb")
+        function encodeUserId(idStr) {
+            const chars = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'];
+            return idStr.split('').map(char => {
+                let num = parseInt(char);
+                return isNaN(num) ? char : chars[num];
+            }).join('');
+        }
+
+        // Harfli kodni qaytadan raqamli IDga o'tkazuvchi funksiya
+        function decodeUserId(encodedStr) {
+            const chars = {'a': '0', 'b': '1', 'c': '2', 'd': '3', 'e': '4', 'f': '5', 'g': '6', 'h': '7', 'i': '8', 'j': '9'};
+            return encodedStr.split('').map(char => chars[char] !== undefined ? chars[char] : char).join('');
+        }
+
+        let encodedUserId = encodeUserId(userId);
+
         let startParam = tg?.initDataUnsafe?.start_param;
-        let referrerId = startParam && startParam.startsWith("ref_") ? startParam.replace("ref_", "") : null;
+        let referrerId = null;
+        if (startParam && startParam.startsWith("ref_")) {
+            let encodedRef = startParam.replace("ref_", "");
+            referrerId = decodeUserId(encodedRef);
+        }
 
         let balance = parseInt(localStorage.getItem('cloud_balance')) || 0;
         let maxEnergy = parseInt(localStorage.getItem('cloud_maxEnergy')) || 500;
@@ -392,8 +413,8 @@
             document.getElementById("referrals-list").innerHTML = refsHtml;
 
             let botUsername = "Cloudcointapbot";
-            // TO'G'RIDAN-TO'G'RI MINI APP OCHUVCHI FORMAT (ASOSIY O'ZGARISH):
-            document.getElementById("ref-link-input").value = `https://t.me/${botUsername}?startapp=ref_${userId}`;
+            // RAQAMLAR O'RNIGA HARFLI KOD BILAN REFERAL HAVOLA (TO'G'RIDAN-TO'G'RI OCHILISHI UCHUN):
+            document.getElementById("ref-link-input").value = `https://t.me/${botUsername}?startapp=ref_${encodedUserId}`;
 
             if (userId === ADMIN_ID) {
                 document.getElementById("nav-admin").classList.remove("hidden");
