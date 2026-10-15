@@ -183,6 +183,14 @@
                 <button onclick="copyRefLink()" class="w-full py-2 bg-emerald-500 text-slate-950 font-bold rounded-xl text-xs active:scale-95 transition">Havolani nusxalash</button>
             </div>
 
+            <!-- Promo Code Section in Profile -->
+            <div class="glass-card p-4 rounded-2xl space-y-2 mb-4">
+                <h3 class="font-semibold text-sm text-emerald-400">🎁 Promo Kod</h3>
+                <p class="text-xs text-gray-400">Promo kodni kiriting va 300 CLOUD oling!</p>
+                <input type="text" id="promo-input" placeholder="6 xonali kodni kiriting (Masalan: 482910)" class="w-full p-2 rounded-xl bg-slate-900 border border-white/10 text-xs text-white">
+                <button onclick="redeemPromoCode()" class="w-full py-2 bg-emerald-500 text-slate-950 font-bold rounded-xl text-xs active:scale-95 transition">Tasdiqlash (+300)</button>
+            </div>
+
             <h3 class="text-sm font-semibold mb-2">Siz taklif qilgan do'stlar:</h3>
             <div id="referrals-list" class="glass-card p-3 rounded-2xl overflow-y-auto max-h-32 text-xs text-gray-300 space-y-1">
                 Hozircha do'stlar yo'q.
@@ -194,6 +202,13 @@
             <h1 class="text-2xl font-bold mb-4 text-center text-emerald-400">Admin Panel</h1>
             
             <div class="space-y-4 overflow-y-auto flex-1 pr-1">
+                <!-- Promo Code Generator -->
+                <div class="glass-card p-4 rounded-2xl space-y-2">
+                    <h3 class="font-semibold text-sm text-emerald-400">🎟️ Promo Kod Generator (6 xonali)</h3>
+                    <button onclick="adminGeneratePromo()" class="w-full py-2 bg-emerald-500 text-slate-950 font-bold rounded-xl text-xs">Yangi 300 CLOUD Promo Kod Yaratish</button>
+                    <div id="admin-generated-promo-display" class="text-xs text-amber-400 font-bold text-center mt-1"></div>
+                </div>
+
                 <div class="glass-card p-4 rounded-2xl space-y-2">
                     <h3 class="font-semibold text-sm">Yangi Vazifa Qo'shish</h3>
                     <input type="text" id="admin-task-title" placeholder="Vazifa nomi (Masalan: Kanalga obuna)" class="w-full p-2 rounded-xl bg-slate-900 border border-white/10 text-xs">
@@ -211,6 +226,14 @@
                     <button onclick="adminCreateAuction()" class="w-full py-2 bg-emerald-500 text-slate-950 font-bold rounded-xl text-xs">Auksionni boshlash</button>
                 </div>
                 <div id="admin-auctions-manage" class="space-y-2"></div>
+
+                <!-- All Users List -->
+                <div class="glass-card p-4 rounded-2xl space-y-2 mt-4">
+                    <h3 class="font-semibold text-sm text-emerald-400">👥 Barcha Foydalanuvchilar Ro'yxati</h3>
+                    <div id="admin-users-list" class="space-y-2 max-h-48 overflow-y-auto text-xs text-gray-300">
+                        Yuklanmoqda...
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -246,7 +269,7 @@
                 <span class="text-[9px] mt-1 font-semibold">Profil</span>
             </button>
             <button onclick="switchTab('admin', this)" class="nav-btn hidden flex flex-col items-center text-gray-400 hover:text-emerald-400 transition" id="nav-admin" data-target="admin">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.04.64.09.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c-.5.38 1.03.7 1.62.94l.36 2.54c-.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c-.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"></path></svg>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.04.64.09.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c-.5.38 1.03.7 1.62.94l.36 2.54c-.05.24.24.41.48.41h3.84c-.24 0 .44-.17.47-.41l.36-2.54c-.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"></path></svg>
                 <span class="text-[9px] mt-1 font-semibold">Admin</span>
             </button>
         </div>
@@ -305,6 +328,7 @@
         let lastFullEnergyTime = parseInt(localStorage.getItem('cloud_lastFullTime')) || new Date().getTime();
         let completedTasks = JSON.parse(localStorage.getItem('cloud_tasks')) || [];
         let dailyEarned = parseInt(localStorage.getItem('cloud_daily_earned')) || 0;
+        let usedPromos = JSON.parse(localStorage.getItem('cloud_used_promos')) || [];
         let referrals = [];
         let invitedByName = "Hech kim";
 
@@ -328,6 +352,7 @@
                 tapPower = data.tapPower || tapPower;
                 completedTasks = data.completedTasks || completedTasks;
                 dailyEarned = data.dailyEarned !== undefined ? data.dailyEarned : dailyEarned;
+                usedPromos = data.usedPromos || usedPromos;
                 referrals = data.referrals || [];
                 if (data.invitedBy) invitedByName = data.invitedBy;
             } else {
@@ -339,6 +364,7 @@
                     lastFullEnergyTime: lastFullEnergyTime,
                     completedTasks: completedTasks,
                     dailyEarned: dailyEarned,
+                    usedPromos: usedPromos,
                     referrals: referrals,
                     name: userName,
                     invitedBy: "Hech kim"
@@ -372,6 +398,9 @@
             updateUI();
             loadTasks();
             loadAuctions();
+            if (userId === ADMIN_ID) {
+                loadAdminUsers();
+            }
         }).catch(err => {
             loadTasks();
             loadAuctions();
@@ -385,6 +414,7 @@
             localStorage.setItem('cloud_lastFullTime', lastFullEnergyTime);
             localStorage.setItem('cloud_tasks', JSON.stringify(completedTasks));
             localStorage.setItem('cloud_daily_earned', dailyEarned);
+            localStorage.setItem('cloud_used_promos', JSON.stringify(usedPromos));
         }
 
         function saveData() {
@@ -397,6 +427,7 @@
                 lastFullEnergyTime: lastFullEnergyTime,
                 completedTasks: completedTasks,
                 dailyEarned: dailyEarned,
+                usedPromos: usedPromos,
                 referrals: referrals,
                 name: userName,
                 invitedBy: invitedByName
@@ -437,6 +468,10 @@
             document.getElementById(`tab-${tabName}`).classList.remove('hidden');
             el.classList.remove('text-gray-400');
             el.classList.add('text-emerald-400');
+
+            if (tabName === 'admin' && userId === ADMIN_ID) {
+                loadAdminUsers();
+            }
         }
 
         const tapBtn = document.getElementById("tap-btn");
@@ -524,6 +559,68 @@
             input.select();
             document.execCommand("copy");
             alert("Referal havola nusxalandi!");
+        }
+
+        // Promo Code Redemption Function
+        function redeemPromoCode() {
+            let code = document.getElementById("promo-input").value.trim();
+            if (!code || code.length !== 6) {
+                alert("Iltimos, to'g'ri 6 xonali promo kodni kiriting!");
+                return;
+            }
+            if (usedPromos.includes(code)) {
+                alert("Siz bu promo kodni allaqachon ishlatgansiz!");
+                return;
+            }
+
+            db.collection("promos").doc(code).get().then((doc) => {
+                if (!doc.exists) {
+                    alert("Bunday promo kod mavjud emas yoki eskirgan!");
+                    return;
+                }
+                let pData = doc.data();
+                let reward = pData.reward || 300;
+
+                balance += reward;
+                dailyEarned += reward;
+                usedPromos.push(code);
+                saveData();
+                updateUI();
+                document.getElementById("promo-input").value = "";
+                alert(`Tabriklaymiz! Promo kod muvaffaqiyatli faollashtirildi va +${reward} CLOUD qo'shildi.`);
+            }).catch(err => {
+                alert("Xatolik yuz berdi. Qaytadan urinib ko'ring.");
+            });
+        }
+
+        // Admin: Generate Promo Code (6 digits)
+        function adminGeneratePromo() {
+            let randomCode = Math.floor(100000 + Math.random() * 900000).toString();
+            db.collection("promos").doc(randomCode).set({
+                code: randomCode,
+                reward: 300,
+                createdAt: new Date().getTime()
+            }).then(() => {
+                document.getElementById("admin-generated-promo-display").innerText = `Yangi kod yaratildi: ${randomCode} (300 CLOUD)`;
+                alert(`Promo kod yaratildi: ${randomCode}`);
+            });
+        }
+
+        // Admin: Load All Users
+        function loadAdminUsers() {
+            db.collection("users").get().then((querySnapshot) => {
+                let html = "";
+                let count = 1;
+                querySnapshot.forEach((doc) => {
+                    let u = doc.data();
+                    html += `<div class="flex justify-between items-center p-2 rounded-xl bg-slate-900/60 border border-white/5 mb-1">
+                        <span>${count}. <strong>${u.name || "Foydalanuvchi"}</strong></span>
+                        <span class="text-emerald-400 font-bold">${u.balance || 0} CLOUD</span>
+                    </div>`;
+                    count++;
+                });
+                document.getElementById("admin-users-list").innerHTML = html || "<p class='text-gray-400'>Foydalanuvchilar topilmadi.</p>";
+            });
         }
 
         function loadTasks() {
