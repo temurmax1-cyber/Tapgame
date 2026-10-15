@@ -244,7 +244,7 @@
                 <span class="text-[9px] mt-1 font-semibold">Profil</span>
             </button>
             <button onclick="switchTab('admin', this)" class="nav-btn hidden flex flex-col items-center text-gray-400 hover:text-emerald-400 transition" id="nav-admin" data-target="admin">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.04.64.09.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c-.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"></path></svg>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.04.64.09.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c-.5.38 1.03.7 1.62.94l.36 2.54c-.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c-.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"></path></svg>
                 <span class="text-[9px] mt-1 font-semibold">Admin</span>
             </button>
         </div>
@@ -277,7 +277,6 @@
         let startParam = tg?.initDataUnsafe?.start_param;
         let referrerId = startParam && startParam.startsWith("ref_") ? startParam.replace("ref_", "") : null;
 
-        // O'yin ma'lumotlari
         let balance = parseInt(localStorage.getItem('cloud_balance')) || 0;
         let maxEnergy = parseInt(localStorage.getItem('cloud_maxEnergy')) || 500;
         let energy = parseInt(localStorage.getItem('cloud_energy')) !== NaN ? parseInt(localStorage.getItem('cloud_energy')) : 500;
@@ -289,7 +288,6 @@
 
         updateUI();
 
-        // 24 soatlik energiya tekshiruvi (24 soatda 1 marta full to'ladi)
         let nowTime = new Date().getTime();
         let twentyFourHours = 24 * 60 * 60 * 1000;
         if (nowTime - lastFullEnergyTime >= twentyFourHours) {
@@ -394,7 +392,8 @@
             document.getElementById("referrals-list").innerHTML = refsHtml;
 
             let botUsername = "Cloudcointapbot";
-            document.getElementById("ref-link-input").value = `https://t.me/${botUsername}?start=ref_${userId}`;
+            // TO'G'RILANDI: startapp formatidagi referal havola
+            document.getElementById("ref-link-input").value = `https://t.me/${botUsername}/app?startapp=ref_${userId}`;
 
             if (userId === ADMIN_ID) {
                 document.getElementById("nav-admin").classList.remove("hidden");
@@ -441,7 +440,6 @@
             }
         });
 
-        // 24 soatlik davriy tekshiruv (har minutda tekshiradi)
         setInterval(() => {
             let currentTime = new Date().getTime();
             if (currentTime - lastFullEnergyTime >= twentyFourHours) {
@@ -646,7 +644,7 @@
                             <span>Sizning tikkaningiz:</span>
                             <strong class="text-amber-400">${userHasBid} CLOUD</strong>
                         </div>
-                        <h3 class="text-sm font-semibold mb-2">YETAKCHILAR</h3>
+                        <h3 class="text-sm font-semibold mb-2">YETACHILAR</h3>
                         <div class="mb-4">${leadersHtml || "<p class='text-xs text-gray-400'>Hozircha stavka qilinganlar yo'q.</p>"}</div>
                         <input type="number" id="bid-input" placeholder="Qo'shimcha CLOUD miqdorini kiriting" class="w-full p-3 rounded-xl bg-slate-900 border border-white/10 text-sm mb-3">
                         <button onclick="placeBid('${auctionId}', ${userHasBid})" class="w-full py-3 bg-emerald-500 text-slate-950 font-bold rounded-xl text-sm">STAVKA QILISH</button>
